@@ -2,11 +2,11 @@
 
 Nov 9, 2026 · @Roxi Biribicchi
 
-Ship on Steam in week 13 at about 6 hours a week, with a playable build every 3 weeks and the Coming Soon page live by week 8.
+Ship on Steam in week 13 at about 6 hours a week, with a playable build every 3 weeks and the Coming Soon page live by week 9.
 
 ## Roadmap
 
-**Launch in week 13, with the store page live from week 8.**
+**Launch in week 13, with the store page submitted in week 8 and live by week 9.**
 
 | Phase | Weeks | Focus | Milestone at the end |
 | --- | --- | --- | --- |
@@ -25,7 +25,7 @@ Each week is one or two Claude Code sessions. Tick a task only when you've playe
 
 ### Phase 1 · Weeks 1–3 · Prototype
 
-- [ ] W1: Set up the project (Phaser, local preview in the browser). A grey box stroller walks on a scrolling street.
+- [ ] W1: Set up the project (Phaser, published to GitHub Pages so you can play it in your browser). A grey box stroller walks on a scrolling street.
 - [ ] W1: Start Steamworks onboarding (identity, tax, bank). It can take weeks, so start now.
 - [ ] W2: Speed control and Lift. The sleep meter appears and drops on hits.
 - [ ] W2: Pothole and curb obstacles.
