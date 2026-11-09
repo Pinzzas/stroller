@@ -1,0 +1,33 @@
+// Every tuning number for the game lives here.
+
+export const GAME_WIDTH = 960; // game picture width in game pixels
+export const GAME_HEIGHT = 540; // game picture height in game pixels
+export const STREET_SCROLL_SPEED = 120; // how fast the street slides left, pixels per second
+export const MAX_FRAME_DELTA_MS = 100; // longest time step in one frame (stops jumps after tab switches)
+export const PAVEMENT_TOP_Y = 420; // where the pavement starts (top edge)
+export const PAVEMENT_SLAB_WIDTH = 80; // width of one pavement slab (seam to seam)
+export const PAVEMENT_SEAM_WIDTH = 2; // width of the darker line between slabs
+export const HOUSE_SPACING = 240; // distance from one house's left edge to the next
+export const HOUSE_WIDTH = 180; // width of one house
+export const HOUSE_HEIGHT = 160; // height of one house (stands on the pavement top)
+export const WINDOW_SIZE = 40; // width and height of each house's window
+export const STROLLER_X = 240; // left edge of the stroller body
+export const STROLLER_GROUND_Y = 450; // where the bottom of the wheels touches the pavement
+export const STROLLER_WIDTH = 90; // stroller body width
+export const STROLLER_HEIGHT = 60; // stroller body height
+export const STROLLER_WHEEL_SIZE = 18; // wheel width and height
+export const STROLLER_HANDLE_WIDTH = 8; // handle width (sticks up from the body's left edge)
+export const STROLLER_HANDLE_HEIGHT = 40; // handle height above the body
+export const COLOR_SKY = 0xcfe8f5; // sky, also the page background
+export const COLOR_HOUSE = 0xf4d6c6; // house walls
+export const COLOR_WINDOW = 0xfff6d8; // house windows
+export const COLOR_PAVEMENT = 0xdcd6cc; // pavement slabs
+export const COLOR_PAVEMENT_SEAM = 0xbcb5aa; // lines between slabs
+export const COLOR_STROLLER = 0x8e99a6; // stroller body and handle
+export const COLOR_WHEEL = 0x5b6672; // wheels
+export const COLOR_BUILD_LABEL = 0x7a7a7a; // build label text
+export const BUILD_LABEL_FONT_SIZE = 12; // build label text size in game pixels
+export const WINDOW_TOP_OFFSET = 30; // gap between the house roof and its window
+export const STROLLER_WHEEL_INSET = 10; // how far each wheel sits in from the body's end
+export const BUILD_LABEL_MARGIN_X = 6; // build label gap from the right edge
+export const BUILD_LABEL_MARGIN_Y = 4; // build label gap from the bottom edge

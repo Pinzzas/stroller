@@ -25,7 +25,7 @@ Each week is one or two Claude Code sessions. Tick a task only when you've playe
 
 ### Phase 1 · Weeks 1–3 · Prototype
 
-- [ ] W1: Set up the project (Phaser, published to GitHub Pages so you can play it in your browser). A grey box stroller walks on a scrolling street.
+- [x] W1: Set up the project (Phaser, published to GitHub Pages so you can play it in your browser). A grey box stroller walks on a scrolling street.
 - [ ] W1: Start Steamworks onboarding (identity, tax, bank). It can take weeks, so start now.
 - [ ] W2: Speed control and Lift. The sleep meter appears and drops on hits.
 - [ ] W2: Pothole and curb obstacles.
