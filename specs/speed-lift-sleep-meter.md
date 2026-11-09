@@ -1,6 +1,6 @@
 # Spec: Speed control, Lift and the sleep meter (W2, task 1)
 
-Status: approved by the owner (2026-11-09). Answers: Q1 = B (test buttons), Q2 = A (test bump), Q3 = yes (refill).
+Status: approved and accepted by the owner (2026-11-09). Answers: Q1 = B (test buttons), Q2 = A (test bump), Q3 = yes (refill).
 Plan item: PLAN.md W2, "Speed control and Lift. The sleep meter appears and
 drops on hits."
 Builds on: specs/project-setup.md (approved).

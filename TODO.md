@@ -2,6 +2,14 @@
 
 Leftovers and bugs, newest first.
 
+## 2026-11-09 — W2 speed control, Lift and sleep meter (accepted)
+- Medium (do in W3 with restart): Phaser keeps keys across a scene restart, so the Up/Down listeners in src/StreetScene.js would pile up (one press = two steps) and src/TouchButtons.js `addPointer(1)` would add a pointer each restart. Remove listeners on 'shutdown'; only add the pointer if fewer than 2 exist.
+- Low: src/TouchButtons.js could also listen for 'pointerupoutside' to release Lift when the finger/mouse is released outside the game area (pointerout/gameout usually cover it).
+- Low: src/Hud.js cloud height assumes text is 16 px tall (really ~19 px), so the gap under "Sleep N" is a little tight. Use the text's real height.
+- Low: src/StreetScene.js `addCapture` duplicates what `addKeys` already does. Harmless.
+- Note: the grey test bump is temporary; the potholes and curbs spec replaces it.
+- Note: on-screen test buttons are a playtest aid only (see DESIGN.md); hide them before launch.
+
 ## 2026-11-09 — W1 project setup (accepted)
 - Low: sky colour is typed twice (src/config.js COLOR_SKY and index.html CSS). Could set the page background from config in main.js.
 - Low: tileXPositions(0, ...) returns -0 as first value instead of 0. Harmless on screen; the test normalises it.
