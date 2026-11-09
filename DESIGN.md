@@ -96,7 +96,7 @@ If it's not in this doc, it waits until after launch.
 - Jumping, pits or any platforming
 - Choosing parents, babies or strollers (cosmetics included)
 - Online leaderboards, accounts or cloud saves (local high score and local save only)
-- Mobile touch controls and app stores
+- Mobile touch controls and app stores (plain on-screen test buttons exist for playtesting on a phone only; they are not a v1 feature and get hidden before launch)
 - Custom art beyond the baby's faces
 
 **Maybe later:** a second neighbourhood, touch controls, stroller colours, a Mac version on Steam (a Mac build exists from week 10 for testing only).
