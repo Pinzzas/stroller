@@ -2,7 +2,6 @@
 
 export const GAME_WIDTH = 960; // game picture width in game pixels
 export const GAME_HEIGHT = 540; // game picture height in game pixels
-export const STREET_SCROLL_SPEED = 120; // how fast the street slides left, pixels per second
 export const MAX_FRAME_DELTA_MS = 100; // longest time step in one frame (stops jumps after tab switches)
 export const PAVEMENT_TOP_Y = 420; // where the pavement starts (top edge)
 export const PAVEMENT_SLAB_WIDTH = 80; // width of one pavement slab (seam to seam)
@@ -31,3 +30,55 @@ export const WINDOW_TOP_OFFSET = 30; // gap between the house roof and its windo
 export const STROLLER_WHEEL_INSET = 10; // how far each wheel sits in from the body's end
 export const BUILD_LABEL_MARGIN_X = 6; // build label gap from the right edge
 export const BUILD_LABEL_MARGIN_Y = 4; // build label gap from the bottom edge
+
+// Speed
+export const SPEED_SLOW = 70; // street speed at slow, pixels per second
+export const SPEED_NORMAL = 120; // street speed at normal
+export const SPEED_BRISK = 180; // street speed at brisk
+export const SPEED_START_LEVEL = 'normal'; // speed when the walk starts
+
+// Lift
+export const LIFT_MAX_HOLD_MS = 800; // longest the front wheels stay up per press
+export const LIFT_TILT_DEGREES = 12; // how far the stroller tilts back while lifted (drawing only)
+
+// Sleep
+export const SLEEP_MAX = 100; // full meter
+export const SLEEP_START = 100; // sleep when the walk starts
+export const SLEEP_JOLT_SMALL = 10; // sleep lost on a small jolt (missing the test bump)
+export const SLEEP_RECOVERY_SLOW = 3; // refill per second at slow speed
+export const SLEEP_RECOVERY_NORMAL = 1; // refill per second at normal speed
+export const SLEEP_RECOVERY_BRISK = 1; // refill per second at brisk speed
+export const SLEEP_RECOVERY_DELAY_MS = 3000; // quiet time after a hit before refilling starts
+
+// Test bump
+export const TEST_BUMP_FIRST_X = 1200; // street position of the first bump's left edge
+export const TEST_BUMP_SPACING = 1080; // street distance from one bump to the next
+export const TEST_BUMP_WIDTH = 40; // bump width
+export const TEST_BUMP_HEIGHT = 12; // bump height (bottom sits on STROLLER_GROUND_Y)
+export const COLOR_TEST_BUMP = 0x8a8178; // bump colour
+
+// Hit feedback
+export const HIT_FLASH_MS = 300; // how long the stroller body flashes after a hit
+export const COLOR_HIT_FLASH = 0xf2a7a7; // flash colour (soft pink)
+
+// Meter and labels
+export const METER_TOP_Y = 16; // top edge of the cloud box
+export const METER_BAR_WIDTH = 240; // bar width when full
+export const METER_BAR_HEIGHT = 18; // bar height
+export const METER_PADDING = 10; // gap between cloud edge and bar/label
+export const METER_LABEL_GAP = 6; // gap between bar and the Sleep N text
+export const COLOR_METER_CLOUD = 0xffffff; // cloud box
+export const COLOR_METER_EMPTY = 0xe6e1ee; // empty part of the bar
+export const COLOR_METER_FILL = 0xb7a6e0; // full part of the bar
+export const HUD_FONT_SIZE = 16; // text size of Sleep N and Speed
+export const HUD_MARGIN = 16; // speed label gap from the top and left edges
+export const COLOR_HUD_TEXT = 0x5a5560; // text colour for HUD labels
+
+// Touch buttons (testing aid)
+export const TOUCH_BUTTON_SIZE = 80; // width and height of Slower/Faster; height of Lift
+export const TOUCH_LIFT_WIDTH = 160; // width of the Lift button
+export const TOUCH_BUTTON_MARGIN = 16; // gap from left/right edge and between Slower and Faster
+export const TOUCH_BUTTON_BOTTOM_MARGIN = 24; // gap from the bottom edge
+export const TOUCH_BUTTON_ALPHA = 0.6; // button see-through-ness (1 = solid)
+export const COLOR_TOUCH_BUTTON = 0xffffff; // button colour
+export const TOUCH_FONT_SIZE = 18; // button text size

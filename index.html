@@ -14,6 +14,14 @@
         background: #cfe8f5; /* COLOR_SKY */
       }
       #game { width: 100%; height: 100%; }
+      /* Stop double-tap zoom, text selection and the iPhone long-press menu */
+      html, body, #game, canvas {
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
     </style>
   </head>
   <body>
