@@ -1,6 +1,6 @@
 # Spec: Project setup and scrolling street (W1)
 
-Status: draft, waiting for owner approval
+Status: approved by the owner (2026-11-09)
 Plan item: PLAN.md W1, "Set up the project (Phaser, published to GitHub Pages so
 you can play it in your browser). A grey box stroller walks on a scrolling street."
 
@@ -179,27 +179,11 @@ GAME_WIDTH)`.
 - Tests live in a `tests/` folder (the tester picks the file names).
 - Node 22 (current long-term-support version) in GitHub Actions.
 
-## Open questions for the owner
+## Owner decisions
 
-**Q1. Which branch publishes to the Pages link?** The Pages link can only show
-one version at a time.
-
-- **A. Only `main`.** Simplest, no extra settings. But work has to be merged
-  into `main` before you can play it, so unaccepted work sits on `main`.
-- **B. `main` plus Claude's working branches (`claude/...`).** (Recommended.)
-  You play the work-in-progress on the same link before accepting it; once you
-  accept, it is merged into `main`, which publishes again. The build label
-  tells you which one you're looking at. Needs one extra one-time setting:
-  Settings → Environments → github-pages → add the branch rule `claude/*`
-  (the producer will walk you through it, or do it for you if possible).
-- **C. Only `main`, plus a manual "Run workflow" button for other branches.**
-  Same as A, but a working branch can be published on request. More clicks.
-
-**Q2. Is iPhone Safari a "must work" or "nice to check"?** DESIGN.md ships
-Windows only and leaves touch controls out of scope. Recommendation: keep
-criteria 18 and 19 as must-pass, since iPhone is how you'll play-test most
-weeks. (Later weeks need a keyboard, so on iPhone you'd only be able to watch
-until touch controls, which are "Maybe later".)
+- **Q1 → B.** Deploy on push to `main` and to `claude/*` branches. The owner
+  adds the `claude/*` branch rule to the github-pages environment once.
+- **Q2 → yes.** iPhone Safari criteria 18 and 19 are must-pass.
 
 ## Out of scope
 
