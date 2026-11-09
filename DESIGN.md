@@ -14,7 +14,13 @@ A cozy 2D side-scroller: push a sleeping baby through the neighbourhood and keep
 
 ## Core loop
 
-[embedded content: core loop · 5 steps]
+**Every wake-up pays for a longer next walk.**
+
+1. **Start a walk**
+2. **Handle threats** — using speed, lift and shush
+3. **Baby wakes up**
+4. **Earn sleep minutes**
+5. **Buy upgrades** — then walk again and sleep longer (back to step 1)
 
 Each run ends when the baby wakes. Sleep minutes buy upgrades, so the next walk lasts longer.
 
