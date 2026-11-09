@@ -3,7 +3,16 @@ import * as C from './config.js';
 import { clampDeltaMs, advanceScroll, tileXPositions } from './logic/scroll.js';
 import { changeSpeedLevel, speedForLevel } from './logic/speed.js';
 import { initialLift, updateLift } from './logic/lift.js';
-import { bumpScreenX, visibleBumpIndexes, bumpsReachingWheel, bumpDamage } from './logic/bumps.js';
+import {
+  obstacleScreenX,
+  obstacleRandom,
+  obstacleTypeFor,
+  visibleObstacleIndexes,
+  obstacleIndexesReachingWheel,
+  obstacleIndexesOverWheel,
+  checkPothole,
+  curbDamage,
+} from './logic/obstacles.js';
 import { applySleepDamage, recoverSleep, recoveryRateFor, canRecover } from './logic/sleep.js';
 import Hud from './Hud.js';
 import TouchButtons from './TouchButtons.js';
@@ -35,8 +44,10 @@ export default class StreetScene extends Phaser.Scene {
     this.sleep = C.SLEEP_START;
     this.msSinceHit = C.SLEEP_RECOVERY_DELAY_MS; // no hit yet: refilling allowed
     this.flashMsLeft = 0;
+    this.streetSeed = Math.floor(Math.random() * 2 ** 32); // fixes the order of potholes and curbs
+    this.lastJoltedPothole = -1; // last pothole that already cost sleep
 
-    this.street = this.add.graphics(); // houses, pavement and bumps, redrawn every frame
+    this.street = this.add.graphics(); // houses, pavement and obstacles, redrawn every frame
     this.stroller = this.add.graphics().setPosition(PIVOT_X, PIVOT_Y);
     this.hud = new Hud(this);
     this.touch = new TouchButtons(
@@ -72,6 +83,10 @@ export default class StreetScene extends Phaser.Scene {
     this.speedLevel = changeSpeedLevel(this.speedLevel, step);
   }
 
+  typeOf(index) {
+    return obstacleTypeFor(obstacleRandom(this.streetSeed, index), C.CURB_CHANCE);
+  }
+
   letGo() {
     this.input.keyboard.resetKeys();
     this.touch.release();
@@ -88,14 +103,25 @@ export default class StreetScene extends Phaser.Scene {
 
     this.msSinceHit += step;
     this.flashMsLeft = Math.max(0, this.flashMsLeft - step);
-    const bumpCount = bumpsReachingWheel(prevScroll, this.scroll, C.TEST_BUMP_FIRST_X, C.TEST_BUMP_SPACING, FRONT_WHEEL_X);
-    for (let i = 0; i < bumpCount; i++) {
-      const damage = bumpDamage(this.lift.isLifted, C.SLEEP_JOLT_SMALL);
-      if (damage > 0) {
-        this.sleep = applySleepDamage(this.sleep, damage, C.SLEEP_MAX);
-        this.flashMsLeft = C.HIT_FLASH_MS;
-        this.msSinceHit = 0;
-      }
+    let damage = 0;
+    const potholes = obstacleIndexesOverWheel(prevScroll, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, FRONT_WHEEL_X, C.POTHOLE_WIDTH);
+    for (const k of potholes) {
+      if (this.typeOf(k) !== 'pothole') continue;
+      const result = checkPothole(k, this.lift.isLifted, this.lastJoltedPothole, C.SLEEP_JOLT_SMALL);
+      this.lastJoltedPothole = result.lastJoltedIndex;
+      damage += result.damage;
+    }
+    const curbRules = { damage: C.SLEEP_JOLT_BIG, maxSafeSpeed: C.CURB_MAX_SAFE_SPEED };
+    const currentSpeed = speedForLevel(this.speedLevel, SPEEDS);
+    const curbs = obstacleIndexesReachingWheel(prevScroll, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, FRONT_WHEEL_X);
+    for (const k of curbs) {
+      if (this.typeOf(k) !== 'curb') continue;
+      damage += curbDamage(this.lift.isLifted, currentSpeed, curbRules);
+    }
+    if (damage > 0) {
+      this.sleep = applySleepDamage(this.sleep, damage, C.SLEEP_MAX);
+      this.flashMsLeft = C.HIT_FLASH_MS;
+      this.msSinceHit = 0;
     }
 
     if (canRecover(this.msSinceHit, C.SLEEP_RECOVERY_DELAY_MS)) {
@@ -136,12 +162,17 @@ export default class StreetScene extends Phaser.Scene {
       g.fillRect(x, C.PAVEMENT_TOP_Y, C.PAVEMENT_SEAM_WIDTH, C.GAME_HEIGHT - C.PAVEMENT_TOP_Y);
     }
 
-    // Test bumps
-    g.fillStyle(C.COLOR_TEST_BUMP);
-    const indexes = visibleBumpIndexes(this.scroll, C.TEST_BUMP_FIRST_X, C.TEST_BUMP_SPACING, C.TEST_BUMP_WIDTH, C.GAME_WIDTH);
-    for (const k of indexes) {
-      const x = Math.round(bumpScreenX(k, this.scroll, C.TEST_BUMP_FIRST_X, C.TEST_BUMP_SPACING));
-      g.fillRect(x, C.STROLLER_GROUND_Y - C.TEST_BUMP_HEIGHT, C.TEST_BUMP_WIDTH, C.TEST_BUMP_HEIGHT);
+    // Potholes and curbs
+    const widest = Math.max(C.POTHOLE_WIDTH, C.CURB_WIDTH);
+    for (const k of visibleObstacleIndexes(this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, widest, C.GAME_WIDTH)) {
+      const x = Math.round(obstacleScreenX(k, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING));
+      if (this.typeOf(k) === 'curb') {
+        g.fillStyle(C.COLOR_CURB);
+        g.fillRect(x, C.STROLLER_GROUND_Y - C.CURB_HEIGHT, C.CURB_WIDTH, C.CURB_HEIGHT);
+      } else {
+        g.fillStyle(C.COLOR_POTHOLE);
+        g.fillRect(x, C.STROLLER_GROUND_Y, C.POTHOLE_WIDTH, C.POTHOLE_DEPTH);
+      }
     }
   }
 
