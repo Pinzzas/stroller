@@ -44,18 +44,29 @@ export const LIFT_TILT_DEGREES = 12; // how far the stroller tilts back while li
 // Sleep
 export const SLEEP_MAX = 100; // full meter
 export const SLEEP_START = 100; // sleep when the walk starts
-export const SLEEP_JOLT_SMALL = 10; // sleep lost on a small jolt (missing the test bump)
+export const SLEEP_JOLT_SMALL = 10; // sleep lost on a small jolt (pothole)
+export const SLEEP_JOLT_BIG = 20; // sleep lost on a big jolt (each curb of a crossing)
 export const SLEEP_RECOVERY_SLOW = 3; // refill per second at slow speed
 export const SLEEP_RECOVERY_NORMAL = 1; // refill per second at normal speed
 export const SLEEP_RECOVERY_BRISK = 1; // refill per second at brisk speed
 export const SLEEP_RECOVERY_DELAY_MS = 3000; // quiet time after a hit before refilling starts
 
-// Test bump
-export const TEST_BUMP_FIRST_X = 1200; // street position of the first bump's left edge
-export const TEST_BUMP_SPACING = 1080; // street distance from one bump to the next
-export const TEST_BUMP_WIDTH = 40; // bump width
-export const TEST_BUMP_HEIGHT = 12; // bump height (bottom sits on STROLLER_GROUND_Y)
-export const COLOR_TEST_BUMP = 0x8a8178; // bump colour
+// Obstacles
+export const OBSTACLE_FIRST_X = 1200; // street position of the first obstacle's left edge (past the screen's right edge)
+export const OBSTACLE_SPACING = 900; // street distance from one obstacle to the next
+export const CROSSING_CHANCE = 0.35; // chance (0 to 1) that an obstacle is a crossing; otherwise a pothole
+export const POTHOLE_WIDTH = 30; // pothole width; also how far the wheel must stay lifted
+export const POTHOLE_DEPTH = 10; // pothole height, downward from STROLLER_GROUND_Y (drawing only)
+export const COLOR_POTHOLE = 0x4a3b33; // pothole colour (very dark brown)
+export const CROSSING_WIDTH = 180; // distance from the down-curb to the up-curb
+export const CROSSING_STEP_HEIGHT = 12; // how far the road is below the wheel line (drawing; stroller drop)
+export const CROSSING_STRIPE_WIDTH = 20; // width of one zebra stripe
+export const CROSSING_STRIPE_SPACING = 36; // left edge to left edge of neighbouring stripes
+export const CROSSING_STRIPE_FIRST_OFFSET = 12; // gap from the down-curb to the first stripe
+export const COLOR_ROAD = 0x5c6370; // road (dark blue-grey)
+export const COLOR_CROSSING_STRIPE = 0xffffff; // zebra stripes (white)
+export const COLOR_CURB_FACE = 0x9a948a; // curb-side band above the road (mid stone grey)
+export const CURB_MAX_SAFE_SPEED = 70; // fastest street speed (pixels per second) that counts as slowed down at a curb
 
 // Hit feedback
 export const HIT_FLASH_MS = 300; // how long the stroller body flashes after a hit
