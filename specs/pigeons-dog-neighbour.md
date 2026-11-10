@@ -1,7 +1,8 @@
 # Spec: Pigeons, dog and neighbour, with a warning icon for heard threats (W4)
 
-Status: **Draft — awaiting owner approval.** Please answer Q1–Q4 below. The
-spec is written for the recommended option of each.
+Status: approved by the owner (2026-11-10), as recommended: Q1 = B (two
+parts; Part 1 this session, neighbour in Part 2), Q2 = A, Q3 = A, Q4 = A.
+Assumptions accepted: small noise = 10; neighbour drain = 3 a second for 5 s.
 Plan item: PLAN.md W4, "Pigeons, dog and neighbour, with warning icons for
 heard threats."
 Builds on: all accepted W1–W3 specs. Where numbers differ,
