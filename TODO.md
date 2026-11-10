@@ -2,6 +2,15 @@
 
 Leftovers and bugs, newest first.
 
+## 2026-11-10 — W4 part 1: pigeons, dog and woof? icon (accepted)
+- Next: Part 2, the neighbour (chat logic, speech bubble, stopped street, NEIGHBOUR_CHANCE 0 → 0.15, neighbour config values). See specs/pigeons-dog-neighbour.md.
+- Low: src/StreetScene.js draws any kind it doesn't know as a pothole, so a neighbour would show as a pothole. Handle 'neighbour' in Part 2.
+- Low: `WOOF!` text is drawn in front of the stroller and can overlap the handle or `Shhh!`. Cosmetic.
+- Low: old comments still say "potholes and curbs" (src/logic/obstacles.js:1, src/StreetScene.js:61 and :300). Comment only.
+- Low: the "pigeons flown off" check keeps drawing them 12 px longer than needed. Harmless.
+- Note: two dogs in a row keep `woof?` on between fences. That's what the spec says, not a bug.
+- Note: a "small noise" is now 10 in DESIGN.md.
+
 ## 2026-11-10 — W3 tuning pass, medium (accepted)
 - Note: the Sleep label rounds up, so after a hit it ticks up 1 point right when the 5 s wait ends, then about 1 every 4 s. Not a bug.
 - Note: careful players can still go long; there is no difficulty ramp yet. W5 sleep stages are the planned fix (spec Q2-A).
