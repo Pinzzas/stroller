@@ -9,10 +9,11 @@ export default class Hud {
     this.graphics = scene.add.graphics();
     const style = { fontFamily: 'sans-serif', fontSize: `${C.HUD_FONT_SIZE}px`, color: textColor };
     this.speedText = scene.add.text(C.HUD_MARGIN, C.HUD_MARGIN, '', style);
+    this.shushText = scene.add.text(C.HUD_MARGIN, C.HUD_MARGIN + C.HUD_FONT_SIZE + C.HUD_LINE_GAP, '', style);
     this.sleepText = scene.add.text(C.GAME_WIDTH / 2, 0, '', style).setOrigin(0.5, 0);
   }
 
-  draw(sleep, speedLevel) {
+  draw(sleep, speedLevel, shushLabelText) {
     const barX = (C.GAME_WIDTH - C.METER_BAR_WIDTH) / 2;
     const barY = C.METER_TOP_Y + C.METER_PADDING;
     const textY = barY + C.METER_BAR_HEIGHT + C.METER_LABEL_GAP;
@@ -30,5 +31,6 @@ export default class Hud {
 
     this.sleepText.setPosition(C.GAME_WIDTH / 2, textY).setText(meterLabel(sleep));
     this.speedText.setText('Speed: ' + speedLevel);
+    this.shushText.setText(shushLabelText);
   }
 }

@@ -94,6 +94,15 @@ export const TOUCH_BUTTON_ALPHA = 0.6; // button see-through-ness (1 = solid)
 export const COLOR_TOUCH_BUTTON = 0xffffff; // button colour
 export const TOUCH_FONT_SIZE = 18; // button text size
 
+// Shush
+export const SHUSH_MAX_CHARGES = 2; // shushes available before the cooldown
+export const SHUSH_RESTORE = 15; // sleep restored by one Shush
+export const SHUSH_COOLDOWN_MS = 30000; // wait after the last charge, before all charges come back
+export const SHUSH_TEXT_MS = 1000; // how long Shhh! shows above the stroller
+export const SHUSH_TEXT_FONT_SIZE = 22; // size of the Shhh! text
+export const SHUSH_TEXT_GAP = 20; // gap between the top of the stroller body and the bottom of Shhh!
+export const HUD_LINE_GAP = 8; // gap between the speed label and the Shush label
+
 // Run end and restart
 export const RUN_RESTART_DELAY_MS = 1000; // wait after waking before Walk again appears and works
 export const TOUCH_POINTERS = 2; // touch points the game needs (one per thumb)
