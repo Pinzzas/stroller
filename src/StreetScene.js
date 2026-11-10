@@ -14,9 +14,11 @@ import {
   checkPothole,
   curbDamage,
 } from './logic/obstacles.js';
+import { initialRun, updateRun, canRestart, endTimeText } from './logic/run.js';
 import { applySleepDamage, recoverSleep, recoveryRateFor, canRecover } from './logic/sleep.js';
 import Hud from './Hud.js';
 import TouchButtons from './TouchButtons.js';
+import EndPanel from './EndPanel.js';
 
 const SPEEDS = { slow: C.SPEED_SLOW, normal: C.SPEED_NORMAL, brisk: C.SPEED_BRISK };
 const RECOVERY_RATES = {
@@ -49,6 +51,8 @@ export default class StreetScene extends Phaser.Scene {
     this.flashMsLeft = 0;
     this.streetSeed = Math.floor(Math.random() * 2 ** 32); // fixes the order of potholes and curbs
     this.lastJoltedPothole = -1; // last pothole that already cost sleep
+    this.run = initialRun();
+    this.isRestarting = false;
 
     this.street = this.add.graphics(); // houses, pavement and obstacles, redrawn every frame
     this.stroller = this.add.graphics().setPosition(PIVOT_X, PIVOT_Y);
@@ -59,18 +63,31 @@ export default class StreetScene extends Phaser.Scene {
       () => this.changeSpeed(1)
     );
 
-    const keys = this.input.keyboard.addKeys('UP,DOWN,SPACE');
+    this.endPanel = new EndPanel(this, () => this.restart());
+
+    const keys = this.input.keyboard.addKeys('UP,DOWN,SPACE,ENTER');
     this.input.keyboard.addCapture('UP,DOWN,SPACE'); // keys must not scroll the page
     this.keys = keys;
-    keys.UP.on('down', () => this.changeSpeed(1)); // one step per press (no key repeat)
-    keys.DOWN.on('down', () => this.changeSpeed(-1));
+    // One step per press (no key repeat). Named so they can be removed on shutdown.
+    const onUp = () => this.changeSpeed(1);
+    const onDown = () => this.changeSpeed(-1);
+    const onEnter = () => this.restart();
+    keys.UP.on('down', onUp);
+    keys.DOWN.on('down', onDown);
+    keys.ENTER.on('down', onEnter);
 
     // Leaving the tab or app counts as letting go.
     this.game.events.on('blur', this.letGo, this);
     this.game.events.on('hidden', this.letGo, this);
+
+    // Remove everything added above, so restarts don't pile up listeners.
     this.events.once('shutdown', () => {
       this.game.events.off('blur', this.letGo, this);
       this.game.events.off('hidden', this.letGo, this);
+      keys.UP.off('down', onUp);
+      keys.DOWN.off('down', onDown);
+      keys.ENTER.off('down', onEnter);
+      this.touch.destroy();
     });
 
     this.add
@@ -83,7 +100,15 @@ export default class StreetScene extends Phaser.Scene {
   }
 
   changeSpeed(step) {
+    if (this.run.phase === 'ended') return; // controls do nothing on the end screen
     this.speedLevel = changeSpeedLevel(this.speedLevel, step);
+  }
+
+  // Start a fresh walk (only on the end screen, after the wait).
+  restart() {
+    if (this.isRestarting || !canRestart(this.run, C.RUN_RESTART_DELAY_MS)) return;
+    this.isRestarting = true;
+    this.scene.restart();
   }
 
   typeOf(index) {
@@ -97,6 +122,12 @@ export default class StreetScene extends Phaser.Scene {
 
   update(time, deltaMs) {
     const step = clampDeltaMs(deltaMs, C.MAX_FRAME_DELTA_MS);
+
+    if (this.run.phase === 'ended') {
+      this.run = updateRun(this.run, this.sleep, step);
+      if (canRestart(this.run, C.RUN_RESTART_DELAY_MS)) this.endPanel.showButton();
+      return;
+    }
 
     const isHeld = this.keys.SPACE.isDown || this.touch.isLiftHeld();
     this.lift = updateLift(this.lift, isHeld, step, C.LIFT_MAX_HOLD_MS);
@@ -131,7 +162,11 @@ export default class StreetScene extends Phaser.Scene {
       this.msSinceHit = 0;
     }
 
-    if (canRecover(this.msSinceHit, C.SLEEP_RECOVERY_DELAY_MS)) {
+    this.run = updateRun(this.run, this.sleep, step);
+    if (this.run.phase === 'ended') {
+      this.lift = initialLift(); // wheels down on the end screen
+      this.endPanel.show(endTimeText(this.run.elapsedMs));
+    } else if (canRecover(this.msSinceHit, C.SLEEP_RECOVERY_DELAY_MS)) {
       const rate = recoveryRateFor(this.speedLevel, RECOVERY_RATES);
       this.sleep = recoverSleep(this.sleep, rate, step, C.SLEEP_MAX);
     }

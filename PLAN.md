@@ -28,8 +28,9 @@ Each week is one or two Claude Code sessions. Tick a task only when you've playe
 - [x] W1: Set up the project (Phaser, published to GitHub Pages so you can play it in your browser). A grey box stroller walks on a scrolling street.
 - [ ] W1: Start Steamworks onboarding (identity, tax, bank). It can take weeks, so start now.
 - [x] W2: Speed control and Lift. The sleep meter appears and drops on hits.
-- [ ] W2: Pothole and curb obstacles.
-- [ ] W3: Shush with cooldown. The run ends at zero sleep; restart button.
+- [x] W2: Pothole and curb obstacles.
+- [ ] W3: Shush with cooldown. (spec approved, not built yet)
+- [x] W3: The run ends at zero sleep; restart button.
 - [ ] W3: **Gate:** play 10 runs. Is dodging fun with grey boxes? If not, fix it before moving on.
 
 ### Phase 2 · Weeks 4–6 · Full run loop
