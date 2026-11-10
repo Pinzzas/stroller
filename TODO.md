@@ -2,6 +2,12 @@
 
 Leftovers and bugs, newest first.
 
+## 2026-11-10 — W3 Shush with cooldown (accepted)
+- Low: src/TouchButtons.js header comment still says "Three" buttons and doesn't mention onShush(). Comment only.
+- Low: src/Hud.js class comment doesn't mention the Shush label. Comment only.
+- Note: dev choice not in the spec: `Shhh!` is hidden when the run ends so it doesn't linger on the end screen.
+- Note: Shush numbers (2 charges, +15, 30 s) are tuning values for the week 3 fun check.
+
 ## 2026-11-10 — W3 run end and restart (accepted)
 - Fixed: the key-listener pile-up and the extra touch pointer per restart (the Medium item from 2026-11-09 below).
 - Low: if a jolt wakes the baby, the stroller stays pink behind the end box (flash timer freezes). Fix is one line: clear the flash when the run ends. Owner has not decided.
