@@ -1,7 +1,7 @@
 # Spec: Shush with cooldown (W3, task 1)
 
-Status: draft, waiting for the owner's approval. Questions Q1–Q2 need an
-answer. The spec is written for the recommended option of each.
+Status: approved by the owner (2026-11-10). Answers: Q1 = A (use both
+charges, then a 30 s wait), Q2 = B (S at full sleep still uses a charge).
 Plan item: PLAN.md W3, "Shush with cooldown."
 Builds on: specs/speed-lift-sleep-meter.md and specs/potholes-and-curbs.md
 (both accepted).
@@ -26,7 +26,7 @@ So this spec builds the full Shush as DESIGN.md describes it: key, restore,
 limited charges, cooldown, a label showing them, and a small visible effect.
 Nothing is added for the siren yet.
 
-## Questions for the owner
+## Questions for the owner (answered 2026-11-10: Q1 A, Q2 B)
 
 **Q1. How do charges and the cooldown work?**
 DESIGN.md says "Limited charges, then a cooldown."
@@ -58,14 +58,16 @@ them to come back.
 Everything from earlier tasks stays. New:
 
 - **Shush label:** top left, under `Speed: normal`, the text `Shush: 2 left`.
-- **Press S** (or tap the new `Shush` test button) when sleep is below 100:
+- **Press S** (or tap the new `Shush` test button) while you have a charge:
   - the meter jumps up by 15, but never above 100;
   - the label shows one charge less;
   - the word `Shhh!` appears above the stroller for 1 second.
+- **[Q2-B] At full sleep (100)** a Shush still uses a charge and shows
+  `Shhh!`, but the meter stays at 100.
 - **Last charge used:** the label shows `Shush: back in 30s` and counts down
   each second. When it reaches zero it shows `Shush: 2 left` again.
-- **Nothing happens** if you press S while it is counting down, or when sleep
-  is already 100. The charge is kept, and `Shhh!` does not appear.
+- **Nothing happens** if you press S while it is counting down. No charge is
+  used and `Shhh!` does not appear.
 - **Test button:** a fourth see-through button, `Shush`, at the bottom right
   just left of `Lift (hold)`.
 
@@ -99,7 +101,7 @@ All other controls are unchanged. Shush works at any speed, and while lifting.
 
 ## How Shush works
 
-- A Shush is used only if **charges > 0 and sleep < `SLEEP_MAX`**. Then:
+- A Shush is used whenever **charges > 0**, also at full sleep [Q2-B]. Then:
   - sleep goes up by `SHUSH_RESTORE` (15), kept at or below `SLEEP_MAX`;
   - charges go down by 1;
   - if charges are now 0, `cooldownMsLeft` becomes `SHUSH_COOLDOWN_MS`
@@ -145,7 +147,7 @@ are pure and never change their inputs. Tuning values are passed in.
 1. `initialShush(maxCharges)` → `{ charges: maxCharges, cooldownMsLeft: 0 }`
 2. `useShush(state, sleep, rules)` → `{ state, sleep, used }`
    - `rules` is `{ restore, maxSleep, cooldownMs }`.
-   - If `state.charges > 0` and `sleep < rules.maxSleep`:
+   - If `state.charges > 0` (whatever the sleep, also at `maxSleep` [Q2-B]):
      - sleep becomes `min(sleep + restore, maxSleep)`;
      - charges go down by 1;
      - `cooldownMsLeft` becomes `cooldownMs` if charges are now 0;
@@ -183,8 +185,11 @@ charges 2.
    unchanged, sleep 50, used false.
 6. `useShush({ charges: 2, cooldownMsLeft: 0 }, 95, rules)` → sleep 100,
    charges 1, used true.
-7. `useShush({ charges: 2, cooldownMsLeft: 0 }, 100, rules)` → state
-   unchanged, sleep 100, used false.
+7. [Q2-B] Full sleep still uses a charge:
+   - `useShush({ charges: 2, cooldownMsLeft: 0 }, 100, rules)` → state
+     `{ charges: 1, cooldownMsLeft: 0 }`, sleep 100, used true.
+   - `useShush({ charges: 1, cooldownMsLeft: 0 }, 100, rules)` → state
+     `{ charges: 0, cooldownMsLeft: 30000 }`, sleep 100, used true.
 8. `useShush` and `updateShush` never change the state object passed in.
 9. `updateShush`:
    - (`{ charges: 0, cooldownMsLeft: 30000 }`, 16, 2) → `{ charges: 0, cooldownMsLeft: 29984 }`
@@ -209,14 +214,15 @@ charges 2.
 On a computer browser:
 
 14. On load, top left shows `Speed: normal` and under it `Shush: 2 left`.
-15. With sleep at 100, press S: nothing happens and the label still says
-    `2 left`.
+15. [Q2-B] With sleep at 100, press S: `Shhh!` shows, the meter stays at
+    `Sleep 100` and the label says `Shush: 1 left`. Then reload the page to get
+    both charges back for the next steps.
 16. Let a pothole hit (`Sleep 90`), then press S at once: the meter jumps to
     100, `Shhh!` shows above the stroller for about a second, and the label
     says `Shush: 1 left`.
-17. Let a crossing hit twice (`Sleep 60`), then press S: the meter shows
-    `Sleep 75` and the label says `Shush: back in 30s`. It counts down about
-    once a second.
+17. Wait for `Sleep 100`, then let a crossing hit at both curbs (`Sleep 60`)
+    and press S: the meter shows `Sleep 75` and the label says
+    `Shush: back in 30s`. It counts down about once a second.
 18. Press S during the countdown: nothing happens.
 19. After about 30 seconds the label says `Shush: 2 left` again and S works
     again.
@@ -230,7 +236,8 @@ On iPhone Safari (landscape):
 
 ## Assumptions (owner, please correct if wrong)
 
-- Q1 = A and Q2 = A.
+- Q1 = A and Q2 = B (owner's picks). Q2 = B means a Shush at full sleep is
+  "wasted" on purpose. You have to judge when it's worth it.
 - Starting numbers: 2 charges, 15 sleep each, 30 s cooldown. One Shush roughly
   undoes a pothole and a half, or most of one bad curb. These are tuning
   numbers for the week 3 fun check.
