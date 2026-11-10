@@ -41,7 +41,7 @@ All numbers in this doc are starting values to tune in playtests.
 The run ends when the meter hits zero. Each run builds from fragile to deep sleep.
 
 - **Range:** 0–100, starting full. A soft cloud at the top of the screen shows it.
-- **Damage:** a small jolt costs about 10, a loud noise about 25.
+- **Damage:** a small jolt costs about 10, a small noise about 10, a loud noise about 25.
 - **Recovery:** refills slowly when nothing happens, faster at slow speed.
 - **Sleep stages:** every 60 seconds the baby sinks one stage (Light → Deep → Dreamy). Each stage cuts damage by 20%, but obstacles come more often. This gives every run a natural arc.
 - **Feedback:** the baby's face and floating z's show the stage; a frown flashes on every hit.

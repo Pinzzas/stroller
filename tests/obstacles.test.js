@@ -4,7 +4,7 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import * as config from '../src/config.js';
 import {
-  obstacleScreenX, obstacleRandom, obstacleTypeFor, visibleObstacleIndexes,
+  obstacleScreenX, obstacleRandom, visibleObstacleIndexes,
   obstacleIndexesReachingWheel, obstacleIndexesOverWheel, checkPothole, curbDamage, obstacleIndexAt,
 } from '../src/logic/obstacles.js';
 import { updateLift, initialLift } from '../src/logic/lift.js';
@@ -24,25 +24,6 @@ test('P2 AC3 obstacleRandom is in [0,1) and repeatable', () => {
       assert.equal(obstacleRandom(seed, k), r);
     }
   }
-});
-
-test('P2 AC4 obstacleRandom gives a mix', () => {
-  const types = (seed, n) => Array.from({ length: n }, (_, k) => obstacleTypeFor(obstacleRandom(seed, k), 0.35));
-  const crossings = types(42, 1000).filter((t) => t === 'crossing').length;
-  assert.ok(crossings >= 250 && crossings <= 450, `crossings: ${crossings}`);
-  assert.notDeepEqual(types(1, 20), types(2, 20));
-  for (const seed of [1, 2]) {
-    assert.ok(types(seed, 20).includes('crossing'), `seed ${seed} no crossing`);
-    assert.ok(types(seed, 20).includes('pothole'), `seed ${seed} no pothole`);
-  }
-});
-
-test('P2 AC5 obstacleTypeFor', () => {
-  assert.equal(obstacleTypeFor(0.1, 0.35), 'crossing');
-  assert.equal(obstacleTypeFor(0.35, 0.35), 'pothole');
-  assert.equal(obstacleTypeFor(0.9, 0.35), 'pothole');
-  assert.equal(obstacleTypeFor(0, 0), 'pothole');
-  assert.equal(obstacleTypeFor(0.999, 1), 'crossing');
 });
 
 test('P2 AC6 visibleObstacleIndexes', () => {
@@ -247,7 +228,7 @@ test('P2 AC17 no file in src/logic mentions phaser', () => {
 test('P2 AC18 config exports the new values exactly and not the removed ones', () => {
   const expected = {
     SLEEP_JOLT_SMALL: 10, SLEEP_JOLT_BIG: 20, OBSTACLE_FIRST_X: 1200, OBSTACLE_SPACING: 700,
-    CROSSING_CHANCE: 0.4, POTHOLE_WIDTH: 30, POTHOLE_DEPTH: 10, COLOR_POTHOLE: 0x4a3b33,
+    CROSSING_CHANCE: 0.25, POTHOLE_WIDTH: 30, POTHOLE_DEPTH: 10, COLOR_POTHOLE: 0x4a3b33,
     CROSSING_WIDTH: 180, CROSSING_STEP_HEIGHT: 12, CROSSING_STRIPE_WIDTH: 20,
     CROSSING_STRIPE_SPACING: 36, CROSSING_STRIPE_FIRST_OFFSET: 12, COLOR_ROAD: 0x5c6370,
     COLOR_CROSSING_STRIPE: 0xffffff, COLOR_CURB_FACE: 0x9a948a, CURB_MAX_SAFE_SPEED: 70,

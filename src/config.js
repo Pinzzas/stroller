@@ -54,7 +54,7 @@ export const SLEEP_RECOVERY_DELAY_MS = 5000; // quiet time after a hit before re
 // Obstacles
 export const OBSTACLE_FIRST_X = 1200; // street position of the first obstacle's left edge (past the screen's right edge)
 export const OBSTACLE_SPACING = 700; // street distance from one obstacle to the next
-export const CROSSING_CHANCE = 0.4; // chance (0 to 1) that an obstacle is a crossing; otherwise a pothole
+export const CROSSING_CHANCE = 0.25; // chance (0 to 1) that an obstacle is a crossing
 export const POTHOLE_WIDTH = 30; // pothole width; also how far the wheel must stay lifted
 export const POTHOLE_DEPTH = 10; // pothole height, downward from STROLLER_GROUND_Y (drawing only)
 export const COLOR_POTHOLE = 0x4a3b33; // pothole colour (very dark brown)
@@ -118,3 +118,39 @@ export const END_BUTTON_HEIGHT = 56; // Walk again button height
 export const END_BUTTON_OFFSET_Y = 120; // box top to the top of the button
 export const END_BUTTON_FONT_SIZE = 20; // Walk again text size
 export const COLOR_END_BUTTON = 0xb7a6e0; // button colour (same lavender as the meter fill)
+
+// Obstacle mix (potholes are whatever is left over)
+export const PIGEON_CHANCE = 0.15; // chance an obstacle is pigeons
+export const DOG_CHANCE = 0.15; // chance an obstacle is a dog
+export const NEIGHBOUR_CHANCE = 0; // chance an obstacle is a neighbour (0 until Part 2 of the W4 spec)
+
+// Noise damage
+export const SLEEP_NOISE_SMALL = 10; // sleep lost on a small noise (pigeons fly off)
+export const SLEEP_NOISE_LOUD = 25; // sleep lost on a loud noise (dog barks)
+
+// Pigeons
+export const PIGEON_WIDTH = 90; // length of the flock; the wheel must stay slow along it
+export const PIGEON_MAX_SAFE_SPEED = 70; // fastest speed that keeps them calm (only slow)
+export const PIGEON_COUNT = 3; // birds in a flock (drawing only)
+export const PIGEON_BIRD_WIDTH = 16; // one bird's width (drawing only)
+export const PIGEON_BIRD_HEIGHT = 12; // one bird's height (drawing only)
+export const PIGEON_FLY_SPEED = 150; // how fast a startled flock rises, pixels per second (drawing only)
+export const COLOR_PIGEON = 0x9aa3b8; // soft blue-grey
+export const PAVEMENT_BACK_Y = 432; // where pigeons stand (back of the pavement, behind the stroller)
+
+// Dog and warning icon
+export const DOG_FENCE_WIDTH = 240; // fence length; the wheel must stay brisk along it
+export const DOG_FENCE_HEIGHT = 40; // fence height, standing on the pavement top (drawing only)
+export const DOG_MIN_SAFE_SPEED = 180; // slowest speed that passes before the dog notices (only brisk)
+export const DOG_WIDTH = 40; // dog box width when it pops up (drawing only)
+export const DOG_HEIGHT = 30; // dog box height (drawing only)
+export const DOG_SHOW_MS = 1500; // how long the dog and WOOF! show after a bark
+export const DOG_TEXT_FONT_SIZE = 22; // size of WOOF!
+export const COLOR_FENCE = 0xd8b48a; // wooden fence (warm tan)
+export const COLOR_DOG = 0xa47551; // dog (soft brown)
+export const HEARD_WARNING_DISTANCE = 1000; // street distance ahead of the front wheel at which the icon appears
+export const WARNING_ICON_WIDTH = 72; // icon box width
+export const WARNING_ICON_HEIGHT = 36; // icon box height
+export const WARNING_ICON_Y = 200; // icon box top (sky, above the roofs)
+export const COLOR_WARNING_ICON = 0xffd98a; // soft amber
+export const DOG_WARNING_TEXT = 'woof?'; // word in the icon
