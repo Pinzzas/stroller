@@ -3,7 +3,7 @@ import * as C from './config.js';
 // Three plain on-screen buttons for playtesting on a phone (a testing aid, not a v1 feature).
 // Calls onSlower() / onFaster() on tap. isLiftHeld() says whether Lift is being held.
 export default class TouchButtons {
-  constructor(scene, onSlower, onFaster) {
+  constructor(scene, onSlower, onFaster, onShush) {
     this.liftPointerId = null; // which finger or mouse is holding Lift (null = nobody)
     const y = C.GAME_HEIGHT - C.TOUCH_BUTTON_BOTTOM_MARGIN - C.TOUCH_BUTTON_SIZE;
     const slowerX = C.TOUCH_BUTTON_MARGIN;
@@ -16,6 +16,10 @@ export default class TouchButtons {
     slower.on('pointerdown', onSlower);
     const faster = this.makeButton(scene, fasterX, y, C.TOUCH_BUTTON_SIZE, 'Faster');
     faster.on('pointerdown', onFaster);
+
+    const shushX = liftX - C.TOUCH_BUTTON_MARGIN - C.TOUCH_BUTTON_SIZE;
+    const shush = this.makeButton(scene, shushX, y, C.TOUCH_BUTTON_SIZE, 'Shush');
+    shush.on('pointerdown', onShush);
 
     const lift = this.makeButton(scene, liftX, y, C.TOUCH_LIFT_WIDTH, 'Lift (hold)');
     lift.on('pointerdown', (pointer) => {

@@ -16,6 +16,7 @@ import {
 } from './logic/obstacles.js';
 import { initialRun, updateRun, canRestart, endTimeText } from './logic/run.js';
 import { applySleepDamage, recoverSleep, recoveryRateFor, canRecover } from './logic/sleep.js';
+import { initialShush, useShush, updateShush, shushLabel } from './logic/shush.js';
 import Hud from './Hud.js';
 import TouchButtons from './TouchButtons.js';
 import EndPanel from './EndPanel.js';
@@ -53,6 +54,9 @@ export default class StreetScene extends Phaser.Scene {
     this.lastJoltedPothole = -1; // last pothole that already cost sleep
     this.run = initialRun();
     this.isRestarting = false;
+    this.shush = initialShush(C.SHUSH_MAX_CHARGES);
+    this.shushQueued = false; // a Shush press waiting for the next frame
+    this.shushTextMsLeft = 0;
 
     this.street = this.add.graphics(); // houses, pavement and obstacles, redrawn every frame
     this.stroller = this.add.graphics().setPosition(PIVOT_X, PIVOT_Y);
@@ -60,12 +64,24 @@ export default class StreetScene extends Phaser.Scene {
     this.touch = new TouchButtons(
       this,
       () => this.changeSpeed(-1),
-      () => this.changeSpeed(1)
+      () => this.changeSpeed(1),
+      () => this.queueShush()
     );
+
+    // "Shhh!" above the stroller body: centred on it, bottom edge a gap above its top.
+    const bodyTopY = C.STROLLER_GROUND_Y - C.STROLLER_WHEEL_SIZE - C.STROLLER_HEIGHT;
+    this.shushWord = this.add
+      .text(C.STROLLER_X + C.STROLLER_WIDTH / 2, bodyTopY - C.SHUSH_TEXT_GAP, 'Shhh!', {
+        fontFamily: 'sans-serif',
+        fontSize: `${C.SHUSH_TEXT_FONT_SIZE}px`,
+        color: '#' + C.COLOR_HUD_TEXT.toString(16).padStart(6, '0'),
+      })
+      .setOrigin(0.5, 1)
+      .setVisible(false);
 
     this.endPanel = new EndPanel(this, () => this.restart());
 
-    const keys = this.input.keyboard.addKeys('UP,DOWN,SPACE,ENTER');
+    const keys = this.input.keyboard.addKeys('UP,DOWN,SPACE,ENTER,S');
     this.input.keyboard.addCapture('UP,DOWN,SPACE'); // keys must not scroll the page
     this.keys = keys;
     // One step per press (no key repeat). Named so they can be removed on shutdown.
@@ -75,6 +91,8 @@ export default class StreetScene extends Phaser.Scene {
     keys.UP.on('down', onUp);
     keys.DOWN.on('down', onDown);
     keys.ENTER.on('down', onEnter);
+    const onShush = () => this.queueShush();
+    keys.S.on('down', onShush);
 
     // Leaving the tab or app counts as letting go.
     this.game.events.on('blur', this.letGo, this);
@@ -87,6 +105,7 @@ export default class StreetScene extends Phaser.Scene {
       keys.UP.off('down', onUp);
       keys.DOWN.off('down', onDown);
       keys.ENTER.off('down', onEnter);
+      keys.S.off('down', onShush);
       this.touch.destroy();
     });
 
@@ -102,6 +121,12 @@ export default class StreetScene extends Phaser.Scene {
   changeSpeed(step) {
     if (this.run.phase === 'ended') return; // controls do nothing on the end screen
     this.speedLevel = changeSpeedLevel(this.speedLevel, step);
+  }
+
+  // Remember a Shush press; it is used at the start of the next frame.
+  queueShush() {
+    if (this.run.phase === 'ended') return; // does nothing on the end screen
+    this.shushQueued = true;
   }
 
   // Start a fresh walk (only on the end screen, after the wait).
@@ -128,6 +153,18 @@ export default class StreetScene extends Phaser.Scene {
       if (canRestart(this.run, C.RUN_RESTART_DELAY_MS)) this.endPanel.showButton();
       return;
     }
+
+    if (this.shushQueued) {
+      this.shushQueued = false;
+      const rules = { restore: C.SHUSH_RESTORE, maxSleep: C.SLEEP_MAX, cooldownMs: C.SHUSH_COOLDOWN_MS };
+      const result = useShush(this.shush, this.sleep, rules);
+      this.shush = result.state;
+      this.sleep = result.sleep;
+      if (result.used) this.shushTextMsLeft = C.SHUSH_TEXT_MS;
+    }
+    this.shush = updateShush(this.shush, step, C.SHUSH_MAX_CHARGES);
+    this.shushTextMsLeft = Math.max(0, this.shushTextMsLeft - step);
+    this.shushWord.setVisible(this.shushTextMsLeft > 0);
 
     const isHeld = this.keys.SPACE.isDown || this.touch.isLiftHeld();
     this.lift = updateLift(this.lift, isHeld, step, C.LIFT_MAX_HOLD_MS);
@@ -165,6 +202,7 @@ export default class StreetScene extends Phaser.Scene {
     this.run = updateRun(this.run, this.sleep, step);
     if (this.run.phase === 'ended') {
       this.lift = initialLift(); // wheels down on the end screen
+      this.shushWord.setVisible(false);
       this.endPanel.show(endTimeText(this.run.elapsedMs));
     } else if (canRecover(this.msSinceHit, C.SLEEP_RECOVERY_DELAY_MS)) {
       const rate = recoveryRateFor(this.speedLevel, RECOVERY_RATES);
@@ -173,7 +211,7 @@ export default class StreetScene extends Phaser.Scene {
 
     this.drawStreet();
     this.drawStroller();
-    this.hud.draw(this.sleep, this.speedLevel);
+    this.hud.draw(this.sleep, this.speedLevel, shushLabel(this.shush));
   }
 
   drawStreet() {
