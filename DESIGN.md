@@ -54,7 +54,7 @@ Six obstacles, each with one clear right answer. Mix ones you see with ones you 
 | Obstacle | Seen or heard | Right answer | If you get it wrong |
 | --- | --- | --- | --- |
 | Pothole | Seen | Lift over it | Small jolt |
-| Curb | Seen | Slow down, then lift | Big jolt |
+| Curb (street crossing) | Seen | The pavement ends at a curb, then a striped crossing, then a curb up. Slow down and lift at each curb | Big jolt at each curb you get wrong |
 | Pigeons on the path | Seen | Slow down so they don't flap off | Small noise |
 | Barking dog behind a fence | Heard (a bark icon warns you first) | Go brisk to pass before it notices | Loud noise |
 | Chatty neighbour | Seen ahead | Go brisk past them | You stop; slow drain while they talk |
