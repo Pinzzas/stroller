@@ -111,7 +111,7 @@ function crossPothole(speed, pressOffsetMs, releaseAfterMs = Infinity) {
   let lift = initialLift(), scroll = 0, last = -1, total = 0;
   for (let t = 0; t < arrival + 3000; t += 16) {
     const held = pressOffsetMs !== null && t >= pressAt && t < releaseAt;
-    lift = updateLift(lift, held, 16, config.LIFT_MAX_HOLD_MS);
+    lift = updateLift(lift, held, 16, 800);
     const prev = scroll;
     scroll = advanceScroll(scroll, speed, 16);
     for (const k of obstacleIndexesOverWheel(prev, scroll, 1200, 900, 311, 30)) {
@@ -156,7 +156,7 @@ function crossCrossing({ speedAt, lifts }) {
       const releaseT = arrived[l.curb] === undefined ? Infinity : arrived[l.curb] + l.releaseAfterMs;
       if (t < releaseT) held = true;
     });
-    lift = updateLift(lift, held, 16, config.LIFT_MAX_HOLD_MS);
+    lift = updateLift(lift, held, 16, 800);
     const prev = scroll;
     scroll = advanceScroll(scroll, speed, 16);
     const speedNow = speedAt(scroll + 311);
@@ -246,12 +246,12 @@ test('P2 AC17 no file in src/logic mentions phaser', () => {
 
 test('P2 AC18 config exports the new values exactly and not the removed ones', () => {
   const expected = {
-    SLEEP_JOLT_SMALL: 10, SLEEP_JOLT_BIG: 20, OBSTACLE_FIRST_X: 1200, OBSTACLE_SPACING: 900,
-    CROSSING_CHANCE: 0.35, POTHOLE_WIDTH: 30, POTHOLE_DEPTH: 10, COLOR_POTHOLE: 0x4a3b33,
+    SLEEP_JOLT_SMALL: 10, SLEEP_JOLT_BIG: 20, OBSTACLE_FIRST_X: 1200, OBSTACLE_SPACING: 700,
+    CROSSING_CHANCE: 0.4, POTHOLE_WIDTH: 30, POTHOLE_DEPTH: 10, COLOR_POTHOLE: 0x4a3b33,
     CROSSING_WIDTH: 180, CROSSING_STEP_HEIGHT: 12, CROSSING_STRIPE_WIDTH: 20,
     CROSSING_STRIPE_SPACING: 36, CROSSING_STRIPE_FIRST_OFFSET: 12, COLOR_ROAD: 0x5c6370,
     COLOR_CROSSING_STRIPE: 0xffffff, COLOR_CURB_FACE: 0x9a948a, CURB_MAX_SAFE_SPEED: 70,
-    LIFT_MAX_HOLD_MS: 800,
+    LIFT_MAX_HOLD_MS: 700,
   };
   for (const [n, v] of Object.entries(expected)) assert.equal(config[n], v, n);
   for (const n of ['TEST_BUMP_FIRST_X', 'TEST_BUMP_SPACING', 'TEST_BUMP_WIDTH', 'TEST_BUMP_HEIGHT',

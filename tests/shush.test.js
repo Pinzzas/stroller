@@ -103,7 +103,7 @@ test('S AC12 no file in src/logic mentions phaser', () => {
 
 test('S AC13 config exports every Shush tuning value with the exact value', () => {
   const expected = {
-    SHUSH_MAX_CHARGES: 2, SHUSH_RESTORE: 15, SHUSH_COOLDOWN_MS: 30000,
+    SHUSH_MAX_CHARGES: 2, SHUSH_RESTORE: 10, SHUSH_COOLDOWN_MS: 45000,
     SHUSH_TEXT_MS: 1000, SHUSH_TEXT_FONT_SIZE: 22, SHUSH_TEXT_GAP: 20, HUD_LINE_GAP: 8,
   };
   for (const [name, value] of Object.entries(expected)) {

@@ -38,7 +38,7 @@ export const SPEED_BRISK = 180; // street speed at brisk
 export const SPEED_START_LEVEL = 'normal'; // speed when the walk starts
 
 // Lift
-export const LIFT_MAX_HOLD_MS = 800; // longest the front wheels stay up per press
+export const LIFT_MAX_HOLD_MS = 700; // longest the front wheels stay up per press
 export const LIFT_TILT_DEGREES = 12; // how far the stroller tilts back while lifted (drawing only)
 
 // Sleep
@@ -46,15 +46,15 @@ export const SLEEP_MAX = 100; // full meter
 export const SLEEP_START = 100; // sleep when the walk starts
 export const SLEEP_JOLT_SMALL = 10; // sleep lost on a small jolt (pothole)
 export const SLEEP_JOLT_BIG = 20; // sleep lost on a big jolt (each curb of a crossing)
-export const SLEEP_RECOVERY_SLOW = 3; // refill per second at slow speed
-export const SLEEP_RECOVERY_NORMAL = 1; // refill per second at normal speed
-export const SLEEP_RECOVERY_BRISK = 1; // refill per second at brisk speed
-export const SLEEP_RECOVERY_DELAY_MS = 3000; // quiet time after a hit before refilling starts
+export const SLEEP_RECOVERY_SLOW = 0.75; // refill per second at slow speed
+export const SLEEP_RECOVERY_NORMAL = 0.25; // refill per second at normal speed
+export const SLEEP_RECOVERY_BRISK = 0.25; // refill per second at brisk speed
+export const SLEEP_RECOVERY_DELAY_MS = 5000; // quiet time after a hit before refilling starts
 
 // Obstacles
 export const OBSTACLE_FIRST_X = 1200; // street position of the first obstacle's left edge (past the screen's right edge)
-export const OBSTACLE_SPACING = 900; // street distance from one obstacle to the next
-export const CROSSING_CHANCE = 0.35; // chance (0 to 1) that an obstacle is a crossing; otherwise a pothole
+export const OBSTACLE_SPACING = 700; // street distance from one obstacle to the next
+export const CROSSING_CHANCE = 0.4; // chance (0 to 1) that an obstacle is a crossing; otherwise a pothole
 export const POTHOLE_WIDTH = 30; // pothole width; also how far the wheel must stay lifted
 export const POTHOLE_DEPTH = 10; // pothole height, downward from STROLLER_GROUND_Y (drawing only)
 export const COLOR_POTHOLE = 0x4a3b33; // pothole colour (very dark brown)
@@ -96,8 +96,8 @@ export const TOUCH_FONT_SIZE = 18; // button text size
 
 // Shush
 export const SHUSH_MAX_CHARGES = 2; // shushes available before the cooldown
-export const SHUSH_RESTORE = 15; // sleep restored by one Shush
-export const SHUSH_COOLDOWN_MS = 30000; // wait after the last charge, before all charges come back
+export const SHUSH_RESTORE = 10; // sleep restored by one Shush
+export const SHUSH_COOLDOWN_MS = 45000; // wait after the last charge, before all charges come back
 export const SHUSH_TEXT_MS = 1000; // how long Shhh! shows above the stroller
 export const SHUSH_TEXT_FONT_SIZE = 22; // size of the Shhh! text
 export const SHUSH_TEXT_GAP = 20; // gap between the top of the stroller body and the bottom of Shhh!
