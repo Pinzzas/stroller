@@ -14,9 +14,19 @@ export function obstacleRandom(seed, index) {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
-// 'crossing' for small random values, otherwise 'pothole'.
-export function obstacleTypeFor(randomValue, crossingChance) {
-  return randomValue < crossingChance ? 'crossing' : 'pothole';
+// Which kind of obstacle a random value (0 to 1) gives. The ranges are stacked in this
+// order: crossing, pigeons, dog, neighbour; the rest is pothole.
+// chances is { crossing, pigeons, dog, neighbour }.
+export function obstacleKindFor(randomValue, chances) {
+  let limit = chances.crossing;
+  if (randomValue < limit) return 'crossing';
+  limit += chances.pigeons;
+  if (randomValue < limit) return 'pigeons';
+  limit += chances.dog;
+  if (randomValue < limit) return 'dog';
+  limit += chances.neighbour;
+  if (randomValue < limit) return 'neighbour';
+  return 'pothole';
 }
 
 // Indexes of all obstacles at least partly on screen, in increasing order.
@@ -82,4 +92,16 @@ export function obstacleIndexAt(position, firstX, spacing, width) {
   const left = firstX + k * spacing;
   if (left < position && position <= left + width) return k;
   return -1;
+}
+
+// Indexes (k >= 0) with L - ahead < position <= L + width, in increasing order.
+export function obstacleIndexesNear(position, firstX, spacing, ahead, width) {
+  const result = [];
+  if (spacing <= 0) return result;
+  for (let k = Math.max(0, Math.floor((position - width - firstX) / spacing)); ; k++) {
+    const left = firstX + k * spacing;
+    if (left - ahead >= position) break;
+    if (position <= left + width) result.push(k);
+  }
+  return result;
 }

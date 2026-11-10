@@ -7,13 +7,15 @@ import {
   obstacleScreenX,
   obstacleIndexAt,
   obstacleRandom,
-  obstacleTypeFor,
+  obstacleKindFor,
   visibleObstacleIndexes,
   obstacleIndexesReachingWheel,
   obstacleIndexesOverWheel,
+  obstacleIndexesNear,
   checkPothole,
   curbDamage,
 } from './logic/obstacles.js';
+import { checkPigeons, checkDog, warningShown } from './logic/threats.js';
 import { initialRun, updateRun, canRestart, endTimeText } from './logic/run.js';
 import { applySleepDamage, recoverSleep, recoveryRateFor, canRecover } from './logic/sleep.js';
 import { initialShush, useShush, updateShush, shushLabel } from './logic/shush.js';
@@ -22,6 +24,12 @@ import TouchButtons from './TouchButtons.js';
 import EndPanel from './EndPanel.js';
 
 const SPEEDS = { slow: C.SPEED_SLOW, normal: C.SPEED_NORMAL, brisk: C.SPEED_BRISK };
+const OBSTACLE_CHANCES = {
+  crossing: C.CROSSING_CHANCE,
+  pigeons: C.PIGEON_CHANCE,
+  dog: C.DOG_CHANCE,
+  neighbour: C.NEIGHBOUR_CHANCE,
+};
 const RECOVERY_RATES = {
   slow: C.SLEEP_RECOVERY_SLOW,
   normal: C.SLEEP_RECOVERY_NORMAL,
@@ -52,6 +60,10 @@ export default class StreetScene extends Phaser.Scene {
     this.flashMsLeft = 0;
     this.streetSeed = Math.floor(Math.random() * 2 ** 32); // fixes the order of potholes and curbs
     this.lastJoltedPothole = -1; // last pothole that already cost sleep
+    this.lastFlappedPigeons = -1; // last flock that already flew off
+    this.msSinceFlap = 0; // time since it flew off (drawing only)
+    this.lastBarkedDog = -1; // last dog that already barked
+    this.msSinceBark = 0; // time since it barked (drawing only)
     this.run = initialRun();
     this.isRestarting = false;
     this.shush = initialShush(C.SHUSH_MAX_CHARGES);
@@ -59,6 +71,7 @@ export default class StreetScene extends Phaser.Scene {
     this.shushTextMsLeft = 0;
 
     this.street = this.add.graphics(); // houses, pavement and obstacles, redrawn every frame
+    this.warningIcon = this.add.graphics(); // the woof? box, fixed on screen
     this.stroller = this.add.graphics().setPosition(PIVOT_X, PIVOT_Y);
     this.hud = new Hud(this);
     this.touch = new TouchButtons(
@@ -75,6 +88,24 @@ export default class StreetScene extends Phaser.Scene {
         fontFamily: 'sans-serif',
         fontSize: `${C.SHUSH_TEXT_FONT_SIZE}px`,
         color: '#' + C.COLOR_HUD_TEXT.toString(16).padStart(6, '0'),
+      })
+      .setOrigin(0.5, 1)
+      .setVisible(false);
+
+    const hudTextColor = '#' + C.COLOR_HUD_TEXT.toString(16).padStart(6, '0');
+    this.warningText = this.add
+      .text(C.GAME_WIDTH - C.HUD_MARGIN - C.WARNING_ICON_WIDTH / 2, C.WARNING_ICON_Y + C.WARNING_ICON_HEIGHT / 2, C.DOG_WARNING_TEXT, {
+        fontFamily: 'sans-serif',
+        fontSize: `${C.HUD_FONT_SIZE}px`,
+        color: hudTextColor,
+      })
+      .setOrigin(0.5)
+      .setVisible(false);
+    this.dogWord = this.add
+      .text(0, 0, 'WOOF!', {
+        fontFamily: 'sans-serif',
+        fontSize: `${C.DOG_TEXT_FONT_SIZE}px`,
+        color: hudTextColor,
       })
       .setOrigin(0.5, 1)
       .setVisible(false);
@@ -137,7 +168,7 @@ export default class StreetScene extends Phaser.Scene {
   }
 
   typeOf(index) {
-    return obstacleTypeFor(obstacleRandom(this.streetSeed, index), C.CROSSING_CHANCE);
+    return obstacleKindFor(obstacleRandom(this.streetSeed, index), OBSTACLE_CHANCES);
   }
 
   letGo() {
@@ -173,6 +204,8 @@ export default class StreetScene extends Phaser.Scene {
     this.scroll = advanceScroll(this.scroll, speedForLevel(this.speedLevel, SPEEDS), step);
 
     this.msSinceHit += step;
+    this.msSinceFlap += step;
+    this.msSinceBark += step;
     this.flashMsLeft = Math.max(0, this.flashMsLeft - step);
     let damage = 0;
     const potholes = obstacleIndexesOverWheel(prevScroll, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, FRONT_WHEEL_X, C.POTHOLE_WIDTH);
@@ -193,6 +226,26 @@ export default class StreetScene extends Phaser.Scene {
         damage += curbDamage(this.lift.isLifted, currentSpeed, curbRules);
       }
     }
+    // Pigeons fly off if the front wheel passes them faster than slow.
+    const pigeonRules = { damage: C.SLEEP_NOISE_SMALL, maxSafeSpeed: C.PIGEON_MAX_SAFE_SPEED };
+    const flocks = obstacleIndexesOverWheel(prevScroll, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, FRONT_WHEEL_X, C.PIGEON_WIDTH);
+    for (const k of flocks) {
+      if (this.typeOf(k) !== 'pigeons') continue;
+      const result = checkPigeons(k, currentSpeed, this.lastFlappedPigeons, pigeonRules);
+      if (result.damage > 0) this.msSinceFlap = 0;
+      this.lastFlappedPigeons = result.lastFlappedIndex;
+      damage += result.damage;
+    }
+    // The dog barks if the front wheel passes the fence slower than brisk.
+    const dogRules = { damage: C.SLEEP_NOISE_LOUD, minSafeSpeed: C.DOG_MIN_SAFE_SPEED };
+    const fences = obstacleIndexesOverWheel(prevScroll, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, FRONT_WHEEL_X, C.DOG_FENCE_WIDTH);
+    for (const k of fences) {
+      if (this.typeOf(k) !== 'dog') continue;
+      const result = checkDog(k, currentSpeed, this.lastBarkedDog, dogRules);
+      if (result.damage > 0) this.msSinceBark = 0;
+      this.lastBarkedDog = result.lastBarkedIndex;
+      damage += result.damage;
+    }
     if (damage > 0) {
       this.sleep = applySleepDamage(this.sleep, damage, C.SLEEP_MAX);
       this.flashMsLeft = C.HIT_FLASH_MS;
@@ -203,6 +256,7 @@ export default class StreetScene extends Phaser.Scene {
     if (this.run.phase === 'ended') {
       this.lift = initialLift(); // wheels down on the end screen
       this.shushWord.setVisible(false);
+      this.hideWarning();
       this.endPanel.show(endTimeText(this.run.elapsedMs));
     } else if (canRecover(this.msSinceHit, C.SLEEP_RECOVERY_DELAY_MS)) {
       const rate = recoveryRateFor(this.speedLevel, RECOVERY_RATES);
@@ -211,6 +265,7 @@ export default class StreetScene extends Phaser.Scene {
 
     this.drawStreet();
     this.drawStroller();
+    if (this.run.phase !== 'ended') this.drawWarning();
     this.hud.draw(this.sleep, this.speedLevel, shushLabel(this.shush));
   }
 
@@ -243,16 +298,68 @@ export default class StreetScene extends Phaser.Scene {
     }
 
     // Potholes (cut into the pavement) and crossings (cover the pavement)
-    const widest = Math.max(C.POTHOLE_WIDTH, C.CROSSING_WIDTH);
+    const widest = Math.max(C.POTHOLE_WIDTH, C.CROSSING_WIDTH, C.PIGEON_WIDTH, C.DOG_FENCE_WIDTH);
+    this.dogWord.setVisible(false);
     for (const k of visibleObstacleIndexes(this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, widest, C.GAME_WIDTH)) {
       const x = Math.round(obstacleScreenX(k, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING));
-      if (this.typeOf(k) === 'crossing') {
+      const kind = this.typeOf(k);
+      if (kind === 'crossing') {
         this.drawCrossing(g, x);
+      } else if (kind === 'pigeons') {
+        this.drawPigeons(g, k, x);
+      } else if (kind === 'dog') {
+        this.drawFence(g, k, x);
       } else {
         g.fillStyle(C.COLOR_POTHOLE);
         g.fillRect(x, C.STROLLER_GROUND_Y, C.POTHOLE_WIDTH, C.POTHOLE_DEPTH);
       }
     }
+  }
+
+  // Three birds at the back of the pavement; after flying off they rise and leave the screen.
+  drawPigeons(g, k, x) {
+    if (k < this.lastFlappedPigeons) return; // an earlier flock that already flew off
+    let rise = 0;
+    if (k === this.lastFlappedPigeons) rise = (C.PIGEON_FLY_SPEED * this.msSinceFlap) / 1000;
+    const bottom = C.PAVEMENT_BACK_Y - rise;
+    if (bottom + C.PIGEON_BIRD_HEIGHT < 0) return; // flown off the top
+    g.fillStyle(C.COLOR_PIGEON);
+    const gap = (C.PIGEON_WIDTH - C.PIGEON_BIRD_WIDTH) / (C.PIGEON_COUNT - 1);
+    for (let i = 0; i < C.PIGEON_COUNT; i++) {
+      g.fillRect(x + i * gap, bottom - C.PIGEON_BIRD_HEIGHT, C.PIGEON_BIRD_WIDTH, C.PIGEON_BIRD_HEIGHT);
+    }
+  }
+
+  // The fence; after a bark the dog pops up over it with WOOF! above.
+  drawFence(g, k, x) {
+    const fenceTop = C.PAVEMENT_TOP_Y - C.DOG_FENCE_HEIGHT;
+    g.fillStyle(C.COLOR_FENCE);
+    g.fillRect(x, fenceTop, C.DOG_FENCE_WIDTH, C.DOG_FENCE_HEIGHT);
+    if (k === this.lastBarkedDog && this.msSinceBark < C.DOG_SHOW_MS) {
+      const dogX = x + (C.DOG_FENCE_WIDTH - C.DOG_WIDTH) / 2;
+      const dogTop = fenceTop - C.DOG_HEIGHT;
+      g.fillStyle(C.COLOR_DOG);
+      g.fillRect(dogX, dogTop, C.DOG_WIDTH, C.DOG_HEIGHT);
+      this.dogWord.setPosition(x + C.DOG_FENCE_WIDTH / 2, dogTop).setVisible(true);
+    }
+  }
+
+  // The woof? icon: shows while an unbarked dog is near (see warningShown).
+  drawWarning() {
+    const wheelPosition = this.scroll + FRONT_WHEEL_X;
+    const indexes = obstacleIndexesNear(wheelPosition, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, C.HEARD_WARNING_DISTANCE, C.DOG_FENCE_WIDTH);
+    const kinds = indexes.map((k) => this.typeOf(k));
+    const show = warningShown(indexes, kinds, this.lastBarkedDog);
+    this.warningIcon.clear();
+    this.warningText.setVisible(show);
+    if (!show) return;
+    this.warningIcon.fillStyle(C.COLOR_WARNING_ICON);
+    this.warningIcon.fillRect(C.GAME_WIDTH - C.HUD_MARGIN - C.WARNING_ICON_WIDTH, C.WARNING_ICON_Y, C.WARNING_ICON_WIDTH, C.WARNING_ICON_HEIGHT);
+  }
+
+  hideWarning() {
+    this.warningIcon.clear();
+    this.warningText.setVisible(false);
   }
 
   // Curb-side band, road and zebra stripes, starting at screen x.

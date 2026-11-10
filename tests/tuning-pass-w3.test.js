@@ -7,7 +7,7 @@ import { obstacleIndexesOverWheel, checkPothole } from '../src/logic/obstacles.j
 
 test('T AC2 config has the option-B tuning values exactly', () => {
   const b = {
-    OBSTACLE_SPACING: 700, CROSSING_CHANCE: 0.4, LIFT_MAX_HOLD_MS: 700,
+    OBSTACLE_SPACING: 700, CROSSING_CHANCE: 0.25, LIFT_MAX_HOLD_MS: 700,
     SLEEP_RECOVERY_SLOW: 0.75, SLEEP_RECOVERY_NORMAL: 0.25, SLEEP_RECOVERY_BRISK: 0.25,
     SLEEP_RECOVERY_DELAY_MS: 5000, SHUSH_RESTORE: 10, SHUSH_COOLDOWN_MS: 45000,
   };
