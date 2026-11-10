@@ -1,7 +1,8 @@
 # Spec: Tuning pass after the week 3 fun check (W3)
 
-Status: **draft, awaiting owner approval.** Q1–Q2 below need an answer. The
-spec is written for the recommended option, **B (medium)**.
+Status: approved by the owner (2026-11-10). Q1 = B (medium). Q2 not answered
+explicitly; the recommendation stands (accept long careful runs for this gate)
+unless the owner says otherwise. It does not change what gets built.
 Plan item: PLAN.md W3, "Gate: play 10 runs. Is dodging fun with grey boxes? If
 not, fix it before moving on."
 Builds on: all accepted W2–W3 specs. Nothing new is built.

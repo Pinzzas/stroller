@@ -31,7 +31,7 @@ Each week is one or two Claude Code sessions. Tick a task only when you've playe
 - [x] W2: Pothole and curb obstacles.
 - [x] W3: Shush with cooldown.
 - [x] W3: The run ends at zero sleep; restart button.
-- [ ] W3: **Gate:** play 10 runs. Is dodging fun with grey boxes? If not, fix it before moving on.
+- [ ] W3: **Gate:** play 10 runs. Is dodging fun with grey boxes? If not, fix it before moving on. (first try failed 2026-11-10: too easy. Medium tuning pass approved, specs/tuning-pass-w3.md, not built yet)
 
 ### Phase 2 · Weeks 4–6 · Full run loop
 
