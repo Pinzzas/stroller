@@ -2,6 +2,11 @@
 
 Leftovers and bugs, newest first.
 
+## 2026-11-10 — W3 tuning pass, medium (accepted)
+- Note: the Sleep label rounds up, so after a hit it ticks up 1 point right when the 5 s wait ends, then about 1 every 4 s. Not a bug.
+- Note: careful players can still go long; there is no difficulty ramp yet. W5 sleep stages are the planned fix (spec Q2-A).
+- Note: older specs still say the old numbers (e.g. "every 7.5 s"); specs/tuning-pass-w3.md replaces them.
+
 ## 2026-11-10 — W3 Shush with cooldown (accepted)
 - Low: src/TouchButtons.js header comment still says "Three" buttons and doesn't mention onShush(). Comment only.
 - Low: src/Hud.js class comment doesn't mention the Shush label. Comment only.
