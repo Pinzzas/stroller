@@ -1,6 +1,6 @@
 # Spec: Run ends at zero sleep; restart button (W3, task 2)
 
-Status: approved by the owner (2026-11-10). Answers: Q1 = A (title,
+Status: accepted by the owner (2026-11-10). Answers: Q1 = A (title,
 "Asleep for m:ss", button), Q2 = A (Enter plus the button).
 Plan item: PLAN.md W3, "The run ends at zero sleep; restart button."
 Builds on: specs/speed-lift-sleep-meter.md and specs/potholes-and-curbs.md
