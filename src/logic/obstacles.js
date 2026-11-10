@@ -14,16 +14,16 @@ export function obstacleRandom(seed, index) {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 
-// 'curb' for small random values, otherwise 'pothole'.
-export function obstacleTypeFor(randomValue, curbChance) {
-  return randomValue < curbChance ? 'curb' : 'pothole';
+// 'crossing' for small random values, otherwise 'pothole'.
+export function obstacleTypeFor(randomValue, crossingChance) {
+  return randomValue < crossingChance ? 'crossing' : 'pothole';
 }
 
 // Indexes of all obstacles at least partly on screen, in increasing order.
 export function visibleObstacleIndexes(scroll, firstX, spacing, width, viewWidth) {
   const result = [];
   if (spacing <= 0) return result; // avoids an endless loop
-  for (let k = 0; ; k++) {
+  for (let k = Math.max(0, Math.floor((scroll - width - firstX) / spacing)); ; k++) {
     const x = obstacleScreenX(k, scroll, firstX, spacing);
     if (x >= viewWidth) break;
     if (x + width > 0) result.push(k);
@@ -69,8 +69,17 @@ export function checkPothole(index, isLifted, lastJoltedIndex, damage) {
   return { damage: 0, lastJoltedIndex };
 }
 
-// Curb: safe only when lifted and slowed down. rules = { damage, maxSafeSpeed }.
+// Each curb of a crossing: safe only when lifted and slowed down. rules = { damage, maxSafeSpeed }.
 export function curbDamage(isLifted, speed, rules) {
   if (isLifted && speed <= rules.maxSafeSpeed) return 0;
   return rules.damage;
+}
+
+// Index of the obstacle (k >= 0) with L < position <= L + width, or -1 if none.
+export function obstacleIndexAt(position, firstX, spacing, width) {
+  if (spacing <= 0) return -1;
+  const k = Math.max(0, Math.floor((position - firstX) / spacing));
+  const left = firstX + k * spacing;
+  if (left < position && position <= left + width) return k;
+  return -1;
 }

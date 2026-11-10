@@ -5,6 +5,7 @@ import { changeSpeedLevel, speedForLevel } from './logic/speed.js';
 import { initialLift, updateLift } from './logic/lift.js';
 import {
   obstacleScreenX,
+  obstacleIndexAt,
   obstacleRandom,
   obstacleTypeFor,
   visibleObstacleIndexes,
@@ -28,6 +29,8 @@ const FRONT_WHEEL_X = C.STROLLER_X + C.STROLLER_WIDTH - C.STROLLER_WHEEL_INSET -
 // The stroller tilts around the back wheel
 const PIVOT_X = C.STROLLER_X + C.STROLLER_WHEEL_INSET + C.STROLLER_WHEEL_SIZE / 2;
 const PIVOT_Y = C.STROLLER_GROUND_Y - C.STROLLER_WHEEL_SIZE / 2;
+// Top of the road in a crossing (worked out from the wheel line)
+const ROAD_TOP_Y = C.STROLLER_GROUND_Y + C.CROSSING_STEP_HEIGHT;
 
 // Set by Vite at build time (see vite.config.js).
 const BUILD_LABEL = typeof __BUILD_LABEL__ === 'string' ? __BUILD_LABEL__ : 'build dev';
@@ -84,7 +87,7 @@ export default class StreetScene extends Phaser.Scene {
   }
 
   typeOf(index) {
-    return obstacleTypeFor(obstacleRandom(this.streetSeed, index), C.CURB_CHANCE);
+    return obstacleTypeFor(obstacleRandom(this.streetSeed, index), C.CROSSING_CHANCE);
   }
 
   letGo() {
@@ -113,10 +116,14 @@ export default class StreetScene extends Phaser.Scene {
     }
     const curbRules = { damage: C.SLEEP_JOLT_BIG, maxSafeSpeed: C.CURB_MAX_SAFE_SPEED };
     const currentSpeed = speedForLevel(this.speedLevel, SPEEDS);
-    const curbs = obstacleIndexesReachingWheel(prevScroll, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, FRONT_WHEEL_X);
-    for (const k of curbs) {
-      if (this.typeOf(k) !== 'curb') continue;
-      damage += curbDamage(this.lift.isLifted, currentSpeed, curbRules);
+    // Down-curbs sit at the crossing's start, up-curbs one crossing-width later.
+    const curbStarts = [C.OBSTACLE_FIRST_X, C.OBSTACLE_FIRST_X + C.CROSSING_WIDTH];
+    for (const firstX of curbStarts) {
+      const reached = obstacleIndexesReachingWheel(prevScroll, this.scroll, firstX, C.OBSTACLE_SPACING, FRONT_WHEEL_X);
+      for (const k of reached) {
+        if (this.typeOf(k) !== 'crossing') continue;
+        damage += curbDamage(this.lift.isLifted, currentSpeed, curbRules);
+      }
     }
     if (damage > 0) {
       this.sleep = applySleepDamage(this.sleep, damage, C.SLEEP_MAX);
@@ -162,13 +169,12 @@ export default class StreetScene extends Phaser.Scene {
       g.fillRect(x, C.PAVEMENT_TOP_Y, C.PAVEMENT_SEAM_WIDTH, C.GAME_HEIGHT - C.PAVEMENT_TOP_Y);
     }
 
-    // Potholes and curbs
-    const widest = Math.max(C.POTHOLE_WIDTH, C.CURB_WIDTH);
+    // Potholes (cut into the pavement) and crossings (cover the pavement)
+    const widest = Math.max(C.POTHOLE_WIDTH, C.CROSSING_WIDTH);
     for (const k of visibleObstacleIndexes(this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, widest, C.GAME_WIDTH)) {
       const x = Math.round(obstacleScreenX(k, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING));
-      if (this.typeOf(k) === 'curb') {
-        g.fillStyle(C.COLOR_CURB);
-        g.fillRect(x, C.STROLLER_GROUND_Y - C.CURB_HEIGHT, C.CURB_WIDTH, C.CURB_HEIGHT);
+      if (this.typeOf(k) === 'crossing') {
+        this.drawCrossing(g, x);
       } else {
         g.fillStyle(C.COLOR_POTHOLE);
         g.fillRect(x, C.STROLLER_GROUND_Y, C.POTHOLE_WIDTH, C.POTHOLE_DEPTH);
@@ -176,10 +182,31 @@ export default class StreetScene extends Phaser.Scene {
     }
   }
 
+  // Curb-side band, road and zebra stripes, starting at screen x.
+  drawCrossing(g, x) {
+    g.fillStyle(C.COLOR_CURB_FACE);
+    g.fillRect(x, C.PAVEMENT_TOP_Y, C.CROSSING_WIDTH, ROAD_TOP_Y - C.PAVEMENT_TOP_Y);
+    g.fillStyle(C.COLOR_ROAD);
+    g.fillRect(x, ROAD_TOP_Y, C.CROSSING_WIDTH, C.GAME_HEIGHT - ROAD_TOP_Y);
+    g.fillStyle(C.COLOR_CROSSING_STRIPE);
+    for (
+      let offset = C.CROSSING_STRIPE_FIRST_OFFSET;
+      offset + C.CROSSING_STRIPE_WIDTH <= C.CROSSING_WIDTH;
+      offset += C.CROSSING_STRIPE_SPACING
+    ) {
+      g.fillRect(x + offset, ROAD_TOP_Y, C.CROSSING_STRIPE_WIDTH, C.GAME_HEIGHT - ROAD_TOP_Y);
+    }
+  }
+
   // Drawn relative to the back wheel's centre, so rotating tilts it around that wheel.
   drawStroller() {
     const g = this.stroller;
     g.clear();
+    // Steps down while the front wheel is between the two curbs of a crossing.
+    const wheelPosition = this.scroll + FRONT_WHEEL_X;
+    const k = obstacleIndexAt(wheelPosition, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, C.CROSSING_WIDTH);
+    const onRoad = k >= 0 && this.typeOf(k) === 'crossing';
+    g.setPosition(PIVOT_X, PIVOT_Y + (onRoad ? C.CROSSING_STEP_HEIGHT : 0));
     g.setAngle(this.lift.isLifted ? -C.LIFT_TILT_DEGREES : 0); // negative = front end up
 
     const left = C.STROLLER_X - PIVOT_X;
