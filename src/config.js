@@ -93,3 +93,19 @@ export const TOUCH_BUTTON_BOTTOM_MARGIN = 24; // gap from the bottom edge
 export const TOUCH_BUTTON_ALPHA = 0.6; // button see-through-ness (1 = solid)
 export const COLOR_TOUCH_BUTTON = 0xffffff; // button colour
 export const TOUCH_FONT_SIZE = 18; // button text size
+
+// Run end and restart
+export const RUN_RESTART_DELAY_MS = 1000; // wait after waking before Walk again appears and works
+export const TOUCH_POINTERS = 2; // touch points the game needs (one per thumb)
+export const END_PANEL_WIDTH = 360; // end box width (centred on screen)
+export const END_PANEL_HEIGHT = 200; // end box height (centred on screen)
+export const COLOR_END_PANEL = 0xffffff; // end box colour
+export const END_TITLE_FONT_SIZE = 28; // size of "The baby woke up!"
+export const END_TITLE_OFFSET_Y = 40; // box top to the centre of the title
+export const END_TEXT_FONT_SIZE = 18; // size of "Asleep for m:ss"
+export const END_TIME_OFFSET_Y = 80; // box top to the centre of the time line
+export const END_BUTTON_WIDTH = 220; // Walk again button width (centred in the box)
+export const END_BUTTON_HEIGHT = 56; // Walk again button height
+export const END_BUTTON_OFFSET_Y = 120; // box top to the top of the button
+export const END_BUTTON_FONT_SIZE = 20; // Walk again text size
+export const COLOR_END_BUTTON = 0xb7a6e0; // button colour (same lavender as the meter fill)

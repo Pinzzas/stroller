@@ -10,7 +10,7 @@ export default class TouchButtons {
     const fasterX = slowerX + C.TOUCH_BUTTON_SIZE + C.TOUCH_BUTTON_MARGIN;
     const liftX = C.GAME_WIDTH - C.TOUCH_BUTTON_MARGIN - C.TOUCH_LIFT_WIDTH;
 
-    scene.input.addPointer(1); // lets two fingers work at once
+    this.scene = scene;
 
     const slower = this.makeButton(scene, slowerX, y, C.TOUCH_BUTTON_SIZE, 'Slower');
     slower.on('pointerdown', onSlower);
@@ -23,8 +23,16 @@ export default class TouchButtons {
     });
     // Only the finger that is holding Lift can let it go (also when released off the button).
     lift.on('pointerout', (pointer) => this.releaseIfHolding(pointer)); // sliding off counts as letting go
-    scene.input.on('pointerup', (pointer) => this.releaseIfHolding(pointer));
-    scene.input.on('gameout', () => this.release());
+    this.onPointerUp = (pointer) => this.releaseIfHolding(pointer);
+    this.onGameOut = () => this.release();
+    scene.input.on('pointerup', this.onPointerUp);
+    scene.input.on('gameout', this.onGameOut);
+  }
+
+  // Remove the listeners added in the constructor (call when the scene shuts down).
+  destroy() {
+    this.scene.input.off('pointerup', this.onPointerUp);
+    this.scene.input.off('gameout', this.onGameOut);
   }
 
   releaseIfHolding(pointer) {
