@@ -1,6 +1,6 @@
 # Spec: Pothole and curb obstacles (W2, task 2)
 
-Status: **draft (revision 2), waiting for the owner's approval.** The first
+Status: **approved (revision 2) on 2026-11-10, Q4 = A, Q5 = A.** The first
 build was rejected on 2026-11-09. This revision follows the owner's notes.
 Earlier answers still apply: Q1 = B (wheels up for the whole pothole
 crossing), Q2 = A (curb: slow and lifted), Q3 = C (random mix).
