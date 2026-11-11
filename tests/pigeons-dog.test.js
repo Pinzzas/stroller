@@ -4,7 +4,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as config from '../src/config.js';
 import {
-  obstacleRandom, obstacleKindFor, obstacleIndexesNear, obstacleIndexesOverWheel,
+  obstacleRandom, obstacleKindFor, obstacleIndexesNear, obstacleIndexesOverWheel, extendPlan,
 } from '../src/logic/obstacles.js';
 import { checkPigeons, checkDog, warningShown } from '../src/logic/threats.js';
 import { advanceScroll } from '../src/logic/scroll.js';
@@ -47,7 +47,7 @@ test('W4 AC4 the mix over 1000 obstacles, and all kinds appear', () => {
 });
 
 test('W4 AC5 obstacleIndexesNear', () => {
-  const f = (p, sp = 700) => obstacleIndexesNear(p, 1200, sp, 1000, 240);
+  const f = (p, sp = extendPlan([], 1e5, 1200, 700)) => obstacleIndexesNear(sp, p, 1000, 240);
   assert.deepEqual(f(0), []);
   assert.deepEqual(f(200), []);
   assert.deepEqual(f(201), [0]);
@@ -55,7 +55,7 @@ test('W4 AC5 obstacleIndexesNear', () => {
   assert.deepEqual(f(1440), [0, 1]);
   assert.deepEqual(f(1441), [1]);
   assert.deepEqual(f(2141), [2]);
-  assert.deepEqual(f(901, 0), []);
+  assert.deepEqual(f(901, []), []);
 });
 
 test('W4 AC6 checkPigeons', () => {
@@ -95,7 +95,7 @@ function simulate(width, check, rules, speedAt) {
     const prev = scroll;
     scroll = advanceScroll(scroll, speed, 16);
     t += 16;
-    for (const k of obstacleIndexesOverWheel(prev, scroll, 1200, 700, 311, width)) {
+    for (const k of obstacleIndexesOverWheel(extendPlan([], 1e5, 1200, 700), prev, scroll, 311, width)) {
       if (k !== 0) continue;
       const r = check(k, speed, last, rules);
       total += r.damage;
@@ -130,7 +130,7 @@ test('W4 AC10 dog simulation', () => {
 
 test('W4 AC11 warning timing', () => {
   const shown = (p) => warningShown(
-    obstacleIndexesNear(p, config.OBSTACLE_FIRST_X, config.OBSTACLE_SPACING, config.HEARD_WARNING_DISTANCE, config.DOG_FENCE_WIDTH).filter((k) => k === 0),
+    obstacleIndexesNear(extendPlan([], 1e5, config.OBSTACLE_FIRST_X, config.OBSTACLE_GAP_LIGHT), p, config.HEARD_WARNING_DISTANCE, config.DOG_FENCE_WIDTH).filter((k) => k === 0),
     ['dog'], -1);
   assert.equal(shown(200), false);
   assert.equal(shown(201), true);
@@ -140,9 +140,9 @@ test('W4 AC11 warning timing', () => {
 });
 
 test('W4 AC12 config sanity', () => {
-  assert.ok((config.OBSTACLE_SPACING - config.DOG_FENCE_WIDTH) / config.SPEED_BRISK >= 2);
-  assert.ok(config.OBSTACLE_SPACING > config.DOG_FENCE_WIDTH);
-  assert.ok(config.OBSTACLE_SPACING > config.PIGEON_WIDTH);
+  assert.ok((config.OBSTACLE_GAP_LIGHT - config.DOG_FENCE_WIDTH) / config.SPEED_BRISK >= 2);
+  assert.ok(config.OBSTACLE_GAP_LIGHT > config.DOG_FENCE_WIDTH);
+  assert.ok(config.OBSTACLE_GAP_LIGHT > config.PIGEON_WIDTH);
   assert.ok((config.GAME_WIDTH - 311) / config.SPEED_BRISK >= 2);
   assert.ok(config.CROSSING_CHANCE + config.PIGEON_CHANCE + config.DOG_CHANCE + config.NEIGHBOUR_CHANCE <= 1);
   assert.ok(config.PIGEON_MAX_SAFE_SPEED >= config.SPEED_SLOW);

@@ -4,7 +4,7 @@ import * as config from '../src/config.js';
 import {
   initialChat, startChat, isChatting, updateChat, neighbourStops, streetSpeed,
 } from '../src/logic/chat.js';
-import { obstacleIndexesReachingWheel } from '../src/logic/obstacles.js';
+import { obstacleIndexesReachingWheel, extendPlan } from '../src/logic/obstacles.js';
 import { applySleepDamage } from '../src/logic/sleep.js';
 import { advanceScroll } from '../src/logic/scroll.js';
 
@@ -63,7 +63,7 @@ function simulate(levelSpeed) {
     const prev = scroll;
     scroll = advanceScroll(scroll, speed, 16);
     if (scroll === prev) { stillRun++; stillFrames++; neverStill = false; longestStill = Math.max(longestStill, stillRun); } else stillRun = 0;
-    const reached = obstacleIndexesReachingWheel(prev, scroll, firstX, spacing, wheelX);
+    const reached = obstacleIndexesReachingWheel(extendPlan([], 1e5, firstX, spacing), prev, scroll, wheelX, 0);
     if (reached.includes(0) && neighbourStops(levelSpeed, 180)) {
       chat = startChat(5000);
       chatsStarted++;
