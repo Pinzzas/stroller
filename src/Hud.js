@@ -10,6 +10,7 @@ export default class Hud {
     const style = { fontFamily: 'sans-serif', fontSize: `${C.HUD_FONT_SIZE}px`, color: textColor };
     this.speedText = scene.add.text(C.HUD_MARGIN, C.HUD_MARGIN, '', style);
     this.shushText = scene.add.text(C.HUD_MARGIN, C.HUD_MARGIN + C.HUD_FONT_SIZE + C.HUD_LINE_GAP, '', style);
+    this.stageText = scene.add.text(C.HUD_MARGIN, C.HUD_MARGIN + 2 * (C.HUD_FONT_SIZE + C.HUD_LINE_GAP), '', style);
     this.sleepText = scene.add.text(C.GAME_WIDTH / 2, 0, '', style).setOrigin(0.5, 0);
   }
 
@@ -32,5 +33,14 @@ export default class Hud {
     this.sleepText.setPosition(C.GAME_WIDTH / 2, textY).setText(meterLabel(sleep));
     this.speedText.setText('Speed: ' + speedLevel);
     this.shushText.setText(shushLabelText);
+  }
+
+  // The sleep stage label (under the Shush label).
+  drawStage(text) {
+    this.stageText.setText(text).setVisible(true);
+  }
+
+  hideStage() {
+    this.stageText.setVisible(false);
   }
 }

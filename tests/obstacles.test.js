@@ -4,16 +4,18 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import * as config from '../src/config.js';
 import {
-  obstacleScreenX, obstacleRandom, visibleObstacleIndexes,
+  obstacleScreenX, obstacleRandom, visibleObstacleIndexes, extendPlan,
   obstacleIndexesReachingWheel, obstacleIndexesOverWheel, checkPothole, curbDamage, obstacleIndexAt,
 } from '../src/logic/obstacles.js';
 import { updateLift, initialLift } from '../src/logic/lift.js';
 import { advanceScroll } from '../src/logic/scroll.js';
 import { applySleepDamage } from '../src/logic/sleep.js';
 
+const planOf = (gap) => extendPlan([], 1e5, 1200, gap);
+
 test('P2 AC2 obstacleScreenX', () => {
-  assert.equal(obstacleScreenX(0, 0, 1200, 900), 1200);
-  assert.equal(obstacleScreenX(2, 1000, 1200, 900), 2000);
+  assert.equal(obstacleScreenX(planOf(900), 0, 0), 1200);
+  assert.equal(obstacleScreenX(planOf(900), 2, 1000), 2000);
 });
 
 test('P2 AC3 obstacleRandom is in [0,1) and repeatable', () => {
@@ -27,17 +29,17 @@ test('P2 AC3 obstacleRandom is in [0,1) and repeatable', () => {
 });
 
 test('P2 AC6 visibleObstacleIndexes', () => {
-  const f = (s, sp = 900) => visibleObstacleIndexes(s, 1200, sp, 180, 960);
+  const f = (s, plan = planOf(900)) => visibleObstacleIndexes(plan, s, 180, 960);
   assert.deepEqual(f(0), []);
   assert.deepEqual(f(300), [0]);
   assert.deepEqual(f(1379), [0, 1]);
   assert.deepEqual(f(1380), [1]);
   assert.deepEqual(f(2300), [2]);
-  assert.deepEqual(f(300, 0), []);
+  assert.deepEqual(f(300, []), []);
 });
 
 test('P2 AC7 obstacleIndexesReachingWheel', () => {
-  const f = (a, b) => obstacleIndexesReachingWheel(a, b, 1200, 900, 311);
+  const f = (a, b) => obstacleIndexesReachingWheel(planOf(900), a, b, 311, 0);
   assert.deepEqual(f(0, 100), []);
   assert.deepEqual(f(880, 889), [0]);
   assert.deepEqual(f(889, 900), []);
@@ -46,7 +48,7 @@ test('P2 AC7 obstacleIndexesReachingWheel', () => {
   assert.deepEqual(f(0, 3000), [0, 1, 2]);
   assert.deepEqual(f(500, 500), []);
   assert.deepEqual(f(500, 400), []);
-  const up = (a, b) => obstacleIndexesReachingWheel(a, b, 1380, 900, 311);
+  const up = (a, b) => obstacleIndexesReachingWheel(planOf(900), a, b, 311, 180);
   assert.deepEqual(up(1060, 1069), [0]);
   assert.deepEqual(up(1069, 1080), []);
   const all = [];
@@ -55,7 +57,7 @@ test('P2 AC7 obstacleIndexesReachingWheel', () => {
 });
 
 test('P2 AC8 obstacleIndexesOverWheel', () => {
-  const f = (a, b) => obstacleIndexesOverWheel(a, b, 1200, 900, 311, 30);
+  const f = (a, b) => obstacleIndexesOverWheel(planOf(900), a, b, 311, 30);
   assert.deepEqual(f(880, 889), []);
   assert.deepEqual(f(889, 890), [0]);
   assert.deepEqual(f(900, 910), [0]);
@@ -95,7 +97,7 @@ function crossPothole(speed, pressOffsetMs, releaseAfterMs = Infinity) {
     lift = updateLift(lift, held, 16, 800);
     const prev = scroll;
     scroll = advanceScroll(scroll, speed, 16);
-    for (const k of obstacleIndexesOverWheel(prev, scroll, 1200, 900, 311, 30)) {
+    for (const k of obstacleIndexesOverWheel(planOf(900), prev, scroll, 311, 30)) {
       if (k !== 0) continue;
       const r = checkPothole(k, lift.isLifted, last, 10);
       total += r.damage;
@@ -141,8 +143,8 @@ function crossCrossing({ speedAt, lifts }) {
     const prev = scroll;
     scroll = advanceScroll(scroll, speed, 16);
     const speedNow = speedAt(scroll + 311);
-    const hits = obstacleIndexesReachingWheel(prev, scroll, 1200, 900, 311).filter((k) => k === 0).length
-      + obstacleIndexesReachingWheel(prev, scroll, 1380, 900, 311).filter((k) => k === 0).length;
+    const hits = obstacleIndexesReachingWheel(planOf(900), prev, scroll, 311, 0).filter((k) => k === 0).length
+      + obstacleIndexesReachingWheel(planOf(900), prev, scroll, 311, 180).filter((k) => k === 0).length;
     if (prev + 311 < downPos && scroll + 311 >= downPos) arrived.down = t;
     if (prev + 311 < upPos && scroll + 311 >= upPos) arrived.up = t;
     for (let i = 0; i < hits; i++) total += curbDamage(lift.isLifted, speedNow, rules);
@@ -165,7 +167,7 @@ test('P2 AC12 crossing simulation', () => {
 });
 
 test('P2 AC13 obstacleIndexAt', () => {
-  const f = (p, sp = 900) => obstacleIndexAt(p, 1200, sp, 180);
+  const f = (p, plan = planOf(900)) => obstacleIndexAt(plan, p, 180);
   assert.equal(f(1200), -1);
   assert.equal(f(1201), 0);
   assert.equal(f(1380), 0);
@@ -173,7 +175,7 @@ test('P2 AC13 obstacleIndexAt', () => {
   assert.equal(f(1500), -1);
   assert.equal(f(2101), 1);
   assert.equal(f(100), -1);
-  assert.equal(f(1300, 0), -1);
+  assert.equal(f(1300, []), -1);
 });
 
 test('P2 AC14 big jolt on the meter', () => {
@@ -191,7 +193,7 @@ test('P2 AC15 config sanity', () => {
   assert.equal(wheelX, 311);
   assert.ok((config.GAME_WIDTH - wheelX) / config.SPEED_BRISK >= 2);
   assert.ok((1000 * config.CROSSING_WIDTH) / config.SPEED_SLOW >= 2 * config.LIFT_MAX_HOLD_MS);
-  assert.ok(config.OBSTACLE_SPACING > config.CROSSING_WIDTH);
+  assert.ok(config.OBSTACLE_GAP_LIGHT > config.CROSSING_WIDTH);
   const offsets = [];
   for (let i = 0; ; i++) {
     const o = config.CROSSING_STRIPE_FIRST_OFFSET + i * config.CROSSING_STRIPE_SPACING;
@@ -227,7 +229,7 @@ test('P2 AC17 no file in src/logic mentions phaser', () => {
 
 test('P2 AC18 config exports the new values exactly and not the removed ones', () => {
   const expected = {
-    SLEEP_JOLT_SMALL: 10, SLEEP_JOLT_BIG: 20, OBSTACLE_FIRST_X: 1200, OBSTACLE_SPACING: 700,
+    SLEEP_JOLT_SMALL: 10, SLEEP_JOLT_BIG: 20, OBSTACLE_FIRST_X: 1200, OBSTACLE_GAP_LIGHT: 700,
     CROSSING_CHANCE: 0.25, POTHOLE_WIDTH: 30, POTHOLE_DEPTH: 10, COLOR_POTHOLE: 0x4a3b33,
     CROSSING_WIDTH: 180, CROSSING_STEP_HEIGHT: 12, CROSSING_STRIPE_WIDTH: 20,
     CROSSING_STRIPE_SPACING: 36, CROSSING_STRIPE_FIRST_OFFSET: 12, COLOR_ROAD: 0x5c6370,

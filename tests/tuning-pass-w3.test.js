@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import * as config from '../src/config.js';
 import { initialLift, updateLift } from '../src/logic/lift.js';
 import { advanceScroll } from '../src/logic/scroll.js';
-import { obstacleIndexesOverWheel, checkPothole } from '../src/logic/obstacles.js';
+import { obstacleIndexesOverWheel, checkPothole, extendPlan } from '../src/logic/obstacles.js';
 
 test('T AC2 config has the option-B tuning values exactly', () => {
   const b = {
-    OBSTACLE_SPACING: 700, CROSSING_CHANCE: 0.25, LIFT_MAX_HOLD_MS: 700,
+    OBSTACLE_GAP_LIGHT: 700, CROSSING_CHANCE: 0.25, LIFT_MAX_HOLD_MS: 700,
     SLEEP_RECOVERY_SLOW: 0.75, SLEEP_RECOVERY_NORMAL: 0.25, SLEEP_RECOVERY_BRISK: 0.25,
     SLEEP_RECOVERY_DELAY_MS: 5000, SHUSH_RESTORE: 10, SHUSH_COOLDOWN_MS: 45000,
   };
@@ -24,7 +24,7 @@ function crossPothole(speed, pressOffsetMs) {
     lift = updateLift(lift, held, 16, 700);
     const prev = scroll;
     scroll = advanceScroll(scroll, speed, 16);
-    for (const k of obstacleIndexesOverWheel(prev, scroll, 1200, 700, 311, 30)) {
+    for (const k of obstacleIndexesOverWheel(extendPlan([], 1e5, 1200, 700), prev, scroll, 311, 30)) {
       if (k !== 0) continue;
       const r = checkPothole(k, lift.isLifted, last, 10);
       total += r.damage;
@@ -45,6 +45,6 @@ test('T AC4 pothole simulation with lift max 700', () => {
 
 test('T AC5 config sanity checks', () => {
   assert.ok(config.SLEEP_RECOVERY_SLOW > config.SLEEP_RECOVERY_NORMAL);
-  assert.ok((config.OBSTACLE_SPACING - config.CROSSING_WIDTH) / config.SPEED_BRISK >= 2);
+  assert.ok((config.OBSTACLE_GAP_LIGHT - config.CROSSING_WIDTH) / config.SPEED_BRISK >= 2);
   assert.ok(config.LIFT_MAX_HOLD_MS - (1000 * config.POTHOLE_WIDTH) / config.SPEED_SLOW >= 150);
 });

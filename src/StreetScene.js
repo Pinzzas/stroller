@@ -6,6 +6,7 @@ import { initialLift, updateLift } from './logic/lift.js';
 import {
   obstacleScreenX,
   obstacleIndexAt,
+  extendPlan,
   obstacleRandom,
   obstacleKindFor,
   visibleObstacleIndexes,
@@ -17,12 +18,14 @@ import {
 } from './logic/obstacles.js';
 import { checkPigeons, checkDog, warningShown } from './logic/threats.js';
 import { initialChat, startChat, isChatting, updateChat, neighbourStops, streetSpeed } from './logic/chat.js';
+import { stageFor, stageLabel, stageDamage, gapFor } from './logic/stages.js';
 import { initialRun, updateRun, canRestart, endTimeText } from './logic/run.js';
 import { applySleepDamage, recoverSleep, recoveryRateFor, canRecover } from './logic/sleep.js';
 import { initialShush, useShush, updateShush, shushLabel } from './logic/shush.js';
 import Hud from './Hud.js';
 import TouchButtons from './TouchButtons.js';
 import EndPanel from './EndPanel.js';
+import ObstacleDrawing from './ObstacleDrawing.js';
 
 const SPEEDS = { slow: C.SPEED_SLOW, normal: C.SPEED_NORMAL, brisk: C.SPEED_BRISK };
 const OBSTACLE_CHANCES = {
@@ -41,8 +44,6 @@ const FRONT_WHEEL_X = C.STROLLER_X + C.STROLLER_WIDTH - C.STROLLER_WHEEL_INSET -
 // The stroller tilts around the back wheel
 const PIVOT_X = C.STROLLER_X + C.STROLLER_WHEEL_INSET + C.STROLLER_WHEEL_SIZE / 2;
 const PIVOT_Y = C.STROLLER_GROUND_Y - C.STROLLER_WHEEL_SIZE / 2;
-// Top of the road in a crossing (worked out from the wheel line)
-const ROAD_TOP_Y = C.STROLLER_GROUND_Y + C.CROSSING_STEP_HEIGHT;
 
 // Set by Vite at build time (see vite.config.js).
 const BUILD_LABEL = typeof __BUILD_LABEL__ === 'string' ? __BUILD_LABEL__ : 'build dev';
@@ -68,6 +69,7 @@ export default class StreetScene extends Phaser.Scene {
     this.chat = initialChat(); // the neighbour's chat (msLeft 0 = not chatting)
     this.chatIndex = -1; // which neighbour we are chatting with (drawing only)
     this.run = initialRun();
+    this.plan = []; // obstacle left edges along the street, grows as you walk
     this.isRestarting = false;
     this.shush = initialShush(C.SHUSH_MAX_CHARGES);
     this.shushQueued = false; // a Shush press waiting for the next frame
@@ -77,6 +79,7 @@ export default class StreetScene extends Phaser.Scene {
     this.warningIcon = this.add.graphics(); // the woof? box, fixed on screen
     this.stroller = this.add.graphics().setPosition(PIVOT_X, PIVOT_Y);
     this.hud = new Hud(this);
+    this.obstacleArt = new ObstacleDrawing(this);
     this.touch = new TouchButtons(
       this,
       () => this.changeSpeed(-1),
@@ -98,23 +101,6 @@ export default class StreetScene extends Phaser.Scene {
     const hudTextColor = '#' + C.COLOR_HUD_TEXT.toString(16).padStart(6, '0');
     this.warningText = this.add
       .text(C.GAME_WIDTH - C.HUD_MARGIN - C.WARNING_ICON_WIDTH / 2, C.WARNING_ICON_Y + C.WARNING_ICON_HEIGHT / 2, C.DOG_WARNING_TEXT, {
-        fontFamily: 'sans-serif',
-        fontSize: `${C.HUD_FONT_SIZE}px`,
-        color: hudTextColor,
-      })
-      .setOrigin(0.5)
-      .setVisible(false);
-    this.dogWord = this.add
-      .text(0, 0, 'WOOF!', {
-        fontFamily: 'sans-serif',
-        fontSize: `${C.DOG_TEXT_FONT_SIZE}px`,
-        color: hudTextColor,
-      })
-      .setOrigin(0.5, 1)
-      .setVisible(false);
-
-    this.chatWord = this.add
-      .text(0, 0, C.NEIGHBOUR_CHAT_TEXT, {
         fontFamily: 'sans-serif',
         fontSize: `${C.HUD_FONT_SIZE}px`,
         color: hudTextColor,
@@ -212,13 +198,19 @@ export default class StreetScene extends Phaser.Scene {
     const isHeld = this.keys.SPACE.isDown || this.touch.isLiftHeld();
     this.lift = updateLift(this.lift, isHeld, step, C.LIFT_MAX_HOLD_MS);
 
+    // The stage comes from the time asleep; it sets the gap for obstacles planned from now on.
+    const stage = stageFor(this.run.elapsedMs, C.SLEEP_STAGE_MS);
+    const gaps = { light: C.OBSTACLE_GAP_LIGHT, deep: C.OBSTACLE_GAP_DEEP, dreamy: C.OBSTACLE_GAP_DREAMY };
+    const planUpTo = this.scroll + FRONT_WHEEL_X + C.OBSTACLE_PLAN_AHEAD;
+    this.plan = extendPlan(this.plan, planUpTo, C.OBSTACLE_FIRST_X, gapFor(stage, gaps));
+
     // Street speed comes from the chat state at the start of the frame; then the chat drains sleep.
     const levelSpeed = speedForLevel(this.speedLevel, SPEEDS);
     const wasChatting = isChatting(this.chat);
     const moveSpeed = streetSpeed(levelSpeed, this.chat);
     const chatResult = updateChat(this.chat, step, C.NEIGHBOUR_DRAIN_PER_SEC);
     this.chat = chatResult.state;
-    this.sleep = applySleepDamage(this.sleep, chatResult.drain, C.SLEEP_MAX);
+    this.sleep = applySleepDamage(this.sleep, stageDamage(chatResult.drain, stage, C.SLEEP_STAGE_DAMAGE_CUT), C.SLEEP_MAX);
 
     const prevScroll = this.scroll;
     this.scroll = advanceScroll(this.scroll, moveSpeed, step);
@@ -229,7 +221,7 @@ export default class StreetScene extends Phaser.Scene {
     this.msSinceBark += step;
     this.flashMsLeft = Math.max(0, this.flashMsLeft - step);
     let damage = 0;
-    const potholes = obstacleIndexesOverWheel(prevScroll, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, FRONT_WHEEL_X, C.POTHOLE_WIDTH);
+    const potholes = obstacleIndexesOverWheel(this.plan, prevScroll, this.scroll, FRONT_WHEEL_X, C.POTHOLE_WIDTH);
     for (const k of potholes) {
       if (this.typeOf(k) !== 'pothole') continue;
       const result = checkPothole(k, this.lift.isLifted, this.lastJoltedPothole, C.SLEEP_JOLT_SMALL);
@@ -239,9 +231,9 @@ export default class StreetScene extends Phaser.Scene {
     const curbRules = { damage: C.SLEEP_JOLT_BIG, maxSafeSpeed: C.CURB_MAX_SAFE_SPEED };
     const currentSpeed = levelSpeed;
     // Down-curbs sit at the crossing's start, up-curbs one crossing-width later.
-    const curbStarts = [C.OBSTACLE_FIRST_X, C.OBSTACLE_FIRST_X + C.CROSSING_WIDTH];
-    for (const firstX of curbStarts) {
-      const reached = obstacleIndexesReachingWheel(prevScroll, this.scroll, firstX, C.OBSTACLE_SPACING, FRONT_WHEEL_X);
+    const curbOffsets = [0, C.CROSSING_WIDTH];
+    for (const offset of curbOffsets) {
+      const reached = obstacleIndexesReachingWheel(this.plan, prevScroll, this.scroll, FRONT_WHEEL_X, offset);
       for (const k of reached) {
         if (this.typeOf(k) !== 'crossing') continue;
         damage += curbDamage(this.lift.isLifted, currentSpeed, curbRules);
@@ -249,7 +241,7 @@ export default class StreetScene extends Phaser.Scene {
     }
     // Pigeons fly off if the front wheel passes them faster than slow.
     const pigeonRules = { damage: C.SLEEP_NOISE_SMALL, maxSafeSpeed: C.PIGEON_MAX_SAFE_SPEED };
-    const flocks = obstacleIndexesOverWheel(prevScroll, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, FRONT_WHEEL_X, C.PIGEON_WIDTH);
+    const flocks = obstacleIndexesOverWheel(this.plan, prevScroll, this.scroll, FRONT_WHEEL_X, C.PIGEON_WIDTH);
     for (const k of flocks) {
       if (this.typeOf(k) !== 'pigeons') continue;
       const result = checkPigeons(k, currentSpeed, this.lastFlappedPigeons, pigeonRules);
@@ -259,7 +251,7 @@ export default class StreetScene extends Phaser.Scene {
     }
     // The dog barks if the front wheel passes the fence slower than brisk.
     const dogRules = { damage: C.SLEEP_NOISE_LOUD, minSafeSpeed: C.DOG_MIN_SAFE_SPEED };
-    const fences = obstacleIndexesOverWheel(prevScroll, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, FRONT_WHEEL_X, C.DOG_FENCE_WIDTH);
+    const fences = obstacleIndexesOverWheel(this.plan, prevScroll, this.scroll, FRONT_WHEEL_X, C.DOG_FENCE_WIDTH);
     for (const k of fences) {
       if (this.typeOf(k) !== 'dog') continue;
       const result = checkDog(k, currentSpeed, this.lastBarkedDog, dogRules);
@@ -268,7 +260,7 @@ export default class StreetScene extends Phaser.Scene {
       damage += result.damage;
     }
     // The neighbour stops you if you reach them slower than brisk.
-    const met = obstacleIndexesReachingWheel(prevScroll, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, FRONT_WHEEL_X);
+    const met = obstacleIndexesReachingWheel(this.plan, prevScroll, this.scroll, FRONT_WHEEL_X, 0);
     for (const k of met) {
       if (this.typeOf(k) !== 'neighbour') continue;
       if (neighbourStops(currentSpeed, C.NEIGHBOUR_MIN_SAFE_SPEED)) {
@@ -277,7 +269,7 @@ export default class StreetScene extends Phaser.Scene {
       }
     }
     if (damage > 0) {
-      this.sleep = applySleepDamage(this.sleep, damage, C.SLEEP_MAX);
+      this.sleep = applySleepDamage(this.sleep, stageDamage(damage, stage, C.SLEEP_STAGE_DAMAGE_CUT), C.SLEEP_MAX);
       this.flashMsLeft = C.HIT_FLASH_MS;
       this.msSinceHit = 0;
     }
@@ -288,6 +280,7 @@ export default class StreetScene extends Phaser.Scene {
       this.chat = initialChat(); // no chat on the end screen
       this.shushWord.setVisible(false);
       this.hideWarning();
+      this.hud.hideStage();
       this.endPanel.show(endTimeText(this.run.elapsedMs));
     } else if (canRecover(this.msSinceHit, C.SLEEP_RECOVERY_DELAY_MS)) {
       const rate = recoveryRateFor(this.speedLevel, RECOVERY_RATES);
@@ -298,6 +291,7 @@ export default class StreetScene extends Phaser.Scene {
     this.drawStroller();
     if (this.run.phase !== 'ended') this.drawWarning();
     this.hud.draw(this.sleep, this.speedLevel, shushLabel(this.shush));
+    if (this.run.phase !== 'ended') this.hud.drawStage(stageLabel(stage, C.SLEEP_STAGE_NAMES));
   }
 
   drawStreet() {
@@ -330,72 +324,17 @@ export default class StreetScene extends Phaser.Scene {
 
     // Potholes (cut into the pavement) and crossings (cover the pavement)
     const widest = Math.max(C.POTHOLE_WIDTH, C.CROSSING_WIDTH, C.PIGEON_WIDTH, C.DOG_FENCE_WIDTH);
-    this.dogWord.setVisible(false);
-    this.chatWord.setVisible(false);
-    for (const k of visibleObstacleIndexes(this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, widest, C.GAME_WIDTH)) {
-      const x = Math.round(obstacleScreenX(k, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING));
-      const kind = this.typeOf(k);
-      if (kind === 'crossing') {
-        this.drawCrossing(g, x);
-      } else if (kind === 'pigeons') {
-        this.drawPigeons(g, k, x);
-      } else if (kind === 'dog') {
-        this.drawFence(g, k, x);
-      } else if (kind === 'neighbour') {
-        this.drawNeighbour(g, k, x);
-      } else {
-        g.fillStyle(C.COLOR_POTHOLE);
-        g.fillRect(x, C.STROLLER_GROUND_Y, C.POTHOLE_WIDTH, C.POTHOLE_DEPTH);
-      }
-    }
-  }
-
-  // Three birds at the back of the pavement; after flying off they rise and leave the screen.
-  drawPigeons(g, k, x) {
-    if (k < this.lastFlappedPigeons) return; // an earlier flock that already flew off
-    let rise = 0;
-    if (k === this.lastFlappedPigeons) rise = (C.PIGEON_FLY_SPEED * this.msSinceFlap) / 1000;
-    const bottom = C.PAVEMENT_BACK_Y - rise;
-    if (bottom + C.PIGEON_BIRD_HEIGHT < 0) return; // flown off the top
-    g.fillStyle(C.COLOR_PIGEON);
-    const gap = (C.PIGEON_WIDTH - C.PIGEON_BIRD_WIDTH) / (C.PIGEON_COUNT - 1);
-    for (let i = 0; i < C.PIGEON_COUNT; i++) {
-      g.fillRect(x + i * gap, bottom - C.PIGEON_BIRD_HEIGHT, C.PIGEON_BIRD_WIDTH, C.PIGEON_BIRD_HEIGHT);
-    }
-  }
-
-  // A tall green box at the back of the pavement; while chatting, a speech bubble above.
-  drawNeighbour(g, k, x) {
-    const top = C.PAVEMENT_BACK_Y - C.NEIGHBOUR_HEIGHT;
-    g.fillStyle(C.COLOR_NEIGHBOUR);
-    g.fillRect(x, top, C.NEIGHBOUR_WIDTH, C.NEIGHBOUR_HEIGHT);
-    if (k === this.chatIndex && isChatting(this.chat)) {
-      const centreX = x + C.NEIGHBOUR_WIDTH / 2;
-      const bubbleTop = top - C.NEIGHBOUR_BUBBLE_GAP - C.NEIGHBOUR_BUBBLE_HEIGHT;
-      g.fillStyle(C.COLOR_BUBBLE);
-      g.fillRect(centreX - C.NEIGHBOUR_BUBBLE_WIDTH / 2, bubbleTop, C.NEIGHBOUR_BUBBLE_WIDTH, C.NEIGHBOUR_BUBBLE_HEIGHT);
-      this.chatWord.setPosition(centreX, bubbleTop + C.NEIGHBOUR_BUBBLE_HEIGHT / 2).setVisible(true);
-    }
-  }
-
-  // The fence; after a bark the dog pops up over it with WOOF! above.
-  drawFence(g, k, x) {
-    const fenceTop = C.PAVEMENT_TOP_Y - C.DOG_FENCE_HEIGHT;
-    g.fillStyle(C.COLOR_FENCE);
-    g.fillRect(x, fenceTop, C.DOG_FENCE_WIDTH, C.DOG_FENCE_HEIGHT);
-    if (k === this.lastBarkedDog && this.msSinceBark < C.DOG_SHOW_MS) {
-      const dogX = x + (C.DOG_FENCE_WIDTH - C.DOG_WIDTH) / 2;
-      const dogTop = fenceTop - C.DOG_HEIGHT;
-      g.fillStyle(C.COLOR_DOG);
-      g.fillRect(dogX, dogTop, C.DOG_WIDTH, C.DOG_HEIGHT);
-      this.dogWord.setPosition(x + C.DOG_FENCE_WIDTH / 2, dogTop).setVisible(true);
+    this.obstacleArt.startFrame();
+    for (const k of visibleObstacleIndexes(this.plan, this.scroll, widest, C.GAME_WIDTH)) {
+      const x = Math.round(obstacleScreenX(this.plan, k, this.scroll));
+      this.obstacleArt.draw(g, this.typeOf(k), k, x);
     }
   }
 
   // The woof? icon: shows while an unbarked dog is near (see warningShown).
   drawWarning() {
     const wheelPosition = this.scroll + FRONT_WHEEL_X;
-    const indexes = obstacleIndexesNear(wheelPosition, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, C.HEARD_WARNING_DISTANCE, C.DOG_FENCE_WIDTH);
+    const indexes = obstacleIndexesNear(this.plan, wheelPosition, C.HEARD_WARNING_DISTANCE, C.DOG_FENCE_WIDTH);
     const kinds = indexes.map((k) => this.typeOf(k));
     const show = warningShown(indexes, kinds, this.lastBarkedDog);
     this.warningIcon.clear();
@@ -410,29 +349,13 @@ export default class StreetScene extends Phaser.Scene {
     this.warningText.setVisible(false);
   }
 
-  // Curb-side band, road and zebra stripes, starting at screen x.
-  drawCrossing(g, x) {
-    g.fillStyle(C.COLOR_CURB_FACE);
-    g.fillRect(x, C.PAVEMENT_TOP_Y, C.CROSSING_WIDTH, ROAD_TOP_Y - C.PAVEMENT_TOP_Y);
-    g.fillStyle(C.COLOR_ROAD);
-    g.fillRect(x, ROAD_TOP_Y, C.CROSSING_WIDTH, C.GAME_HEIGHT - ROAD_TOP_Y);
-    g.fillStyle(C.COLOR_CROSSING_STRIPE);
-    for (
-      let offset = C.CROSSING_STRIPE_FIRST_OFFSET;
-      offset + C.CROSSING_STRIPE_WIDTH <= C.CROSSING_WIDTH;
-      offset += C.CROSSING_STRIPE_SPACING
-    ) {
-      g.fillRect(x + offset, ROAD_TOP_Y, C.CROSSING_STRIPE_WIDTH, C.GAME_HEIGHT - ROAD_TOP_Y);
-    }
-  }
-
   // Drawn relative to the back wheel's centre, so rotating tilts it around that wheel.
   drawStroller() {
     const g = this.stroller;
     g.clear();
     // Steps down while the front wheel is between the two curbs of a crossing.
     const wheelPosition = this.scroll + FRONT_WHEEL_X;
-    const k = obstacleIndexAt(wheelPosition, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, C.CROSSING_WIDTH);
+    const k = obstacleIndexAt(this.plan, wheelPosition, C.CROSSING_WIDTH);
     const onRoad = k >= 0 && this.typeOf(k) === 'crossing';
     g.setPosition(PIVOT_X, PIVOT_Y + (onRoad ? C.CROSSING_STEP_HEIGHT : 0));
     g.setAngle(this.lift.isLifted ? -C.LIFT_TILT_DEGREES : 0); // negative = front end up

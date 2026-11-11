@@ -53,7 +53,6 @@ export const SLEEP_RECOVERY_DELAY_MS = 5000; // quiet time after a hit before re
 
 // Obstacles
 export const OBSTACLE_FIRST_X = 1200; // street position of the first obstacle's left edge (past the screen's right edge)
-export const OBSTACLE_SPACING = 700; // street distance from one obstacle to the next
 export const CROSSING_CHANCE = 0.25; // chance (0 to 1) that an obstacle is a crossing
 export const POTHOLE_WIDTH = 30; // pothole width; also how far the wheel must stay lifted
 export const POTHOLE_DEPTH = 10; // pothole height, downward from STROLLER_GROUND_Y (drawing only)
@@ -167,3 +166,12 @@ export const NEIGHBOUR_BUBBLE_HEIGHT = 40; // speech bubble height
 export const NEIGHBOUR_BUBBLE_GAP = 10; // gap between the neighbour's head and the bubble
 export const COLOR_BUBBLE = 0xffffff; // speech bubble (white)
 export const NEIGHBOUR_CHAT_TEXT = 'Ooh, is the baby asleep? So...'; // bubble text
+
+// Sleep stages (Light, Deep, Dreamy)
+export const SLEEP_STAGE_MS = 60000; // time asleep per stage
+export const SLEEP_STAGE_NAMES = ['Light', 'Deep', 'Dreamy']; // stage names (text)
+export const SLEEP_STAGE_DAMAGE_CUT = 0.2; // damage cut per stage (Deep x0.8, Dreamy x0.6)
+export const OBSTACLE_GAP_LIGHT = 700; // street distance from one obstacle to the next in Light
+export const OBSTACLE_GAP_DEEP = 500; // gap in Deep
+export const OBSTACLE_GAP_DREAMY = 400; // gap in Dreamy
+export const OBSTACLE_PLAN_AHEAD = 1400; // how far ahead of the front wheel the street is planned
