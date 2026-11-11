@@ -175,3 +175,16 @@ export const OBSTACLE_GAP_LIGHT = 700; // street distance from one obstacle to t
 export const OBSTACLE_GAP_DEEP = 500; // gap in Deep
 export const OBSTACLE_GAP_DREAMY = 400; // gap in Dreamy
 export const OBSTACLE_PLAN_AHEAD = 1400; // how far ahead of the front wheel the street is planned
+
+// Siren and one-at-a-time intro
+export const SIREN_CHANCE = 0.1; // chance an obstacle is a siren (potholes get what is left)
+export const SIREN_PEAK_WIDTH = 100; // street length of the peak (1.4 / 0.8 / 0.6 s at slow / normal / brisk)
+export const SIREN_WARNING_TEXT = 'nee-naw'; // word in the icon
+export const SIREN_MISS_TEXT = 'NEE-NAW!'; // text shown on a miss
+export const SIREN_SHOW_MS = 1500; // how long NEE-NAW! shows
+export const SIREN_BAR_HEIGHT = 8; // loudness bar height
+export const SIREN_BAR_GAP = 4; // gap between the icon and the bar
+export const COLOR_SIREN_BAR = 0xf5b0a0; // filled bar (soft coral)
+export const COLOR_SIREN_PEAK = 0xf5b0a0; // icon colour at the peak (soft coral)
+export const INTRO_ORDER = ['crossing', 'pigeons', 'dog', 'neighbour', 'siren']; // order new kinds join in every walk
+export const INTRO_EVERY = 3; // a new kind joins every this many obstacles

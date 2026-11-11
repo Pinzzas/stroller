@@ -15,8 +15,8 @@ export function obstacleRandom(seed, index) {
 }
 
 // Which kind of obstacle a random value (0 to 1) gives. The ranges are stacked in this
-// order: crossing, pigeons, dog, neighbour; the rest is pothole.
-// chances is { crossing, pigeons, dog, neighbour }.
+// order: crossing, pigeons, dog, neighbour, siren; the rest is pothole.
+// chances is { crossing, pigeons, dog, neighbour, siren }.
 export function obstacleKindFor(randomValue, chances) {
   let limit = chances.crossing;
   if (randomValue < limit) return 'crossing';
@@ -26,6 +26,8 @@ export function obstacleKindFor(randomValue, chances) {
   if (randomValue < limit) return 'dog';
   limit += chances.neighbour;
   if (randomValue < limit) return 'neighbour';
+  limit += chances.siren || 0;
+  if (randomValue < limit) return 'siren';
   return 'pothole';
 }
 
