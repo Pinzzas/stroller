@@ -283,6 +283,7 @@ export default class StreetScene extends Phaser.Scene {
       }
     }
     // A siren that is not calmed by the end of its peak is loud.
+    this.sirenMissMsLeft = Math.max(0, this.sirenMissMsLeft - step);
     const sirenHit = stageDamage(C.SLEEP_NOISE_LOUD, stage, C.SLEEP_STAGE_DAMAGE_CUT);
     const sirenEnds = obstacleIndexesReachingWheel(this.plan, prevScroll, this.scroll, FRONT_WHEEL_X, C.SIREN_PEAK_WIDTH);
     let sirenDamage = 0;
@@ -293,7 +294,6 @@ export default class StreetScene extends Phaser.Scene {
       if (result.damage > 0) this.sirenMissMsLeft = C.SIREN_SHOW_MS;
       sirenDamage += result.damage;
     }
-    this.sirenMissMsLeft = Math.max(0, this.sirenMissMsLeft - step);
     if (damage > 0 || sirenDamage > 0) {
       damage = stageDamage(damage, stage, C.SLEEP_STAGE_DAMAGE_CUT) + sirenDamage;
       this.sleep = applySleepDamage(this.sleep, damage, C.SLEEP_MAX);
@@ -375,9 +375,10 @@ export default class StreetScene extends Phaser.Scene {
     const which = heardWarningFor(indexes, kinds, this.lastBarkedDog, this.lastSettledSiren);
     const iconX = C.GAME_WIDTH - C.HUD_MARGIN - C.WARNING_ICON_WIDTH;
     this.warningIcon.clear();
-    this.warningText.setVisible(which !== null);
-    this.sirenMissWord.setVisible(this.sirenMissMsLeft > 0 && which === null);
-    if (which === null) return;
+    const showMiss = this.sirenMissMsLeft > 0; // NEE-NAW! takes the icon's place for its full time
+    this.sirenMissWord.setVisible(showMiss);
+    this.warningText.setVisible(which !== null && !showMiss);
+    if (which === null || showMiss) return;
     let color = C.COLOR_WARNING_ICON;
     if (which === 'siren') {
       const left = this.plan[indexes[kinds.findIndex((kind, i) => kind === 'siren' && indexes[i] > this.lastSettledSiren)]];

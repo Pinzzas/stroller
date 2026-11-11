@@ -36,6 +36,8 @@ export default class ObstacleDrawing {
       this.drawFence(g, k, x);
     } else if (kind === 'neighbour') {
       this.drawNeighbour(g, k, x);
+    } else if (kind === 'siren') {
+      // nothing is drawn on the street for a siren
     } else {
       g.fillStyle(C.COLOR_POTHOLE);
       g.fillRect(x, C.STROLLER_GROUND_Y, C.POTHOLE_WIDTH, C.POTHOLE_DEPTH);
