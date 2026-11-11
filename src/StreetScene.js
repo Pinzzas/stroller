@@ -16,6 +16,7 @@ import {
   curbDamage,
 } from './logic/obstacles.js';
 import { checkPigeons, checkDog, warningShown } from './logic/threats.js';
+import { initialChat, startChat, isChatting, updateChat, neighbourStops, streetSpeed } from './logic/chat.js';
 import { initialRun, updateRun, canRestart, endTimeText } from './logic/run.js';
 import { applySleepDamage, recoverSleep, recoveryRateFor, canRecover } from './logic/sleep.js';
 import { initialShush, useShush, updateShush, shushLabel } from './logic/shush.js';
@@ -64,6 +65,8 @@ export default class StreetScene extends Phaser.Scene {
     this.msSinceFlap = 0; // time since it flew off (drawing only)
     this.lastBarkedDog = -1; // last dog that already barked
     this.msSinceBark = 0; // time since it barked (drawing only)
+    this.chat = initialChat(); // the neighbour's chat (msLeft 0 = not chatting)
+    this.chatIndex = -1; // which neighbour we are chatting with (drawing only)
     this.run = initialRun();
     this.isRestarting = false;
     this.shush = initialShush(C.SHUSH_MAX_CHARGES);
@@ -108,6 +111,15 @@ export default class StreetScene extends Phaser.Scene {
         color: hudTextColor,
       })
       .setOrigin(0.5, 1)
+      .setVisible(false);
+
+    this.chatWord = this.add
+      .text(0, 0, C.NEIGHBOUR_CHAT_TEXT, {
+        fontFamily: 'sans-serif',
+        fontSize: `${C.HUD_FONT_SIZE}px`,
+        color: hudTextColor,
+      })
+      .setOrigin(0.5)
       .setVisible(false);
 
     this.endPanel = new EndPanel(this, () => this.restart());
@@ -200,10 +212,19 @@ export default class StreetScene extends Phaser.Scene {
     const isHeld = this.keys.SPACE.isDown || this.touch.isLiftHeld();
     this.lift = updateLift(this.lift, isHeld, step, C.LIFT_MAX_HOLD_MS);
 
+    // Street speed comes from the chat state at the start of the frame; then the chat drains sleep.
+    const levelSpeed = speedForLevel(this.speedLevel, SPEEDS);
+    const wasChatting = isChatting(this.chat);
+    const moveSpeed = streetSpeed(levelSpeed, this.chat);
+    const chatResult = updateChat(this.chat, step, C.NEIGHBOUR_DRAIN_PER_SEC);
+    this.chat = chatResult.state;
+    this.sleep = applySleepDamage(this.sleep, chatResult.drain, C.SLEEP_MAX);
+
     const prevScroll = this.scroll;
-    this.scroll = advanceScroll(this.scroll, speedForLevel(this.speedLevel, SPEEDS), step);
+    this.scroll = advanceScroll(this.scroll, moveSpeed, step);
 
     this.msSinceHit += step;
+    if (wasChatting) this.msSinceHit = 0; // no refill during a chat; the wait starts when it ends
     this.msSinceFlap += step;
     this.msSinceBark += step;
     this.flashMsLeft = Math.max(0, this.flashMsLeft - step);
@@ -216,7 +237,7 @@ export default class StreetScene extends Phaser.Scene {
       damage += result.damage;
     }
     const curbRules = { damage: C.SLEEP_JOLT_BIG, maxSafeSpeed: C.CURB_MAX_SAFE_SPEED };
-    const currentSpeed = speedForLevel(this.speedLevel, SPEEDS);
+    const currentSpeed = levelSpeed;
     // Down-curbs sit at the crossing's start, up-curbs one crossing-width later.
     const curbStarts = [C.OBSTACLE_FIRST_X, C.OBSTACLE_FIRST_X + C.CROSSING_WIDTH];
     for (const firstX of curbStarts) {
@@ -246,6 +267,15 @@ export default class StreetScene extends Phaser.Scene {
       this.lastBarkedDog = result.lastBarkedIndex;
       damage += result.damage;
     }
+    // The neighbour stops you if you reach them slower than brisk.
+    const met = obstacleIndexesReachingWheel(prevScroll, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, FRONT_WHEEL_X);
+    for (const k of met) {
+      if (this.typeOf(k) !== 'neighbour') continue;
+      if (neighbourStops(currentSpeed, C.NEIGHBOUR_MIN_SAFE_SPEED)) {
+        this.chat = startChat(C.NEIGHBOUR_CHAT_MS);
+        this.chatIndex = k;
+      }
+    }
     if (damage > 0) {
       this.sleep = applySleepDamage(this.sleep, damage, C.SLEEP_MAX);
       this.flashMsLeft = C.HIT_FLASH_MS;
@@ -255,6 +285,7 @@ export default class StreetScene extends Phaser.Scene {
     this.run = updateRun(this.run, this.sleep, step);
     if (this.run.phase === 'ended') {
       this.lift = initialLift(); // wheels down on the end screen
+      this.chat = initialChat(); // no chat on the end screen
       this.shushWord.setVisible(false);
       this.hideWarning();
       this.endPanel.show(endTimeText(this.run.elapsedMs));
@@ -300,6 +331,7 @@ export default class StreetScene extends Phaser.Scene {
     // Potholes (cut into the pavement) and crossings (cover the pavement)
     const widest = Math.max(C.POTHOLE_WIDTH, C.CROSSING_WIDTH, C.PIGEON_WIDTH, C.DOG_FENCE_WIDTH);
     this.dogWord.setVisible(false);
+    this.chatWord.setVisible(false);
     for (const k of visibleObstacleIndexes(this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING, widest, C.GAME_WIDTH)) {
       const x = Math.round(obstacleScreenX(k, this.scroll, C.OBSTACLE_FIRST_X, C.OBSTACLE_SPACING));
       const kind = this.typeOf(k);
@@ -309,6 +341,8 @@ export default class StreetScene extends Phaser.Scene {
         this.drawPigeons(g, k, x);
       } else if (kind === 'dog') {
         this.drawFence(g, k, x);
+      } else if (kind === 'neighbour') {
+        this.drawNeighbour(g, k, x);
       } else {
         g.fillStyle(C.COLOR_POTHOLE);
         g.fillRect(x, C.STROLLER_GROUND_Y, C.POTHOLE_WIDTH, C.POTHOLE_DEPTH);
@@ -327,6 +361,20 @@ export default class StreetScene extends Phaser.Scene {
     const gap = (C.PIGEON_WIDTH - C.PIGEON_BIRD_WIDTH) / (C.PIGEON_COUNT - 1);
     for (let i = 0; i < C.PIGEON_COUNT; i++) {
       g.fillRect(x + i * gap, bottom - C.PIGEON_BIRD_HEIGHT, C.PIGEON_BIRD_WIDTH, C.PIGEON_BIRD_HEIGHT);
+    }
+  }
+
+  // A tall green box at the back of the pavement; while chatting, a speech bubble above.
+  drawNeighbour(g, k, x) {
+    const top = C.PAVEMENT_BACK_Y - C.NEIGHBOUR_HEIGHT;
+    g.fillStyle(C.COLOR_NEIGHBOUR);
+    g.fillRect(x, top, C.NEIGHBOUR_WIDTH, C.NEIGHBOUR_HEIGHT);
+    if (k === this.chatIndex && isChatting(this.chat)) {
+      const centreX = x + C.NEIGHBOUR_WIDTH / 2;
+      const bubbleTop = top - C.NEIGHBOUR_BUBBLE_GAP - C.NEIGHBOUR_BUBBLE_HEIGHT;
+      g.fillStyle(C.COLOR_BUBBLE);
+      g.fillRect(centreX - C.NEIGHBOUR_BUBBLE_WIDTH / 2, bubbleTop, C.NEIGHBOUR_BUBBLE_WIDTH, C.NEIGHBOUR_BUBBLE_HEIGHT);
+      this.chatWord.setPosition(centreX, bubbleTop + C.NEIGHBOUR_BUBBLE_HEIGHT / 2).setVisible(true);
     }
   }
 
