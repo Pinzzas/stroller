@@ -2,9 +2,15 @@
 
 Leftovers and bugs, newest first.
 
+## 2026-11-11 — W4 part 2: the chatty neighbour (accepted)
+- Fixed: StreetScene no longer draws a neighbour as a pothole (Low item from W4 part 1).
+- Low: src/StreetScene.js is now about 460 lines. Move the obstacle drawing (pigeons, fence, neighbour, crossing) into its own file before the W5 siren.
+- Low: when a chat starts, the meter can refill for one frame (at most about 0.01 sleep). Can't be seen in play.
+- Low: src/config.js comment for PAVEMENT_BACK_Y says only pigeons stand there; the neighbour does too. Comment only.
+
 ## 2026-11-10 — W4 part 1: pigeons, dog and woof? icon (accepted)
-- Next: Part 2, the neighbour (chat logic, speech bubble, stopped street, NEIGHBOUR_CHANCE 0 → 0.15, neighbour config values). See specs/pigeons-dog-neighbour.md.
-- Low: src/StreetScene.js draws any kind it doesn't know as a pothole, so a neighbour would show as a pothole. Handle 'neighbour' in Part 2.
+- ~~Next: Part 2, the neighbour.~~ Done 2026-11-11.
+- ~~Low: src/StreetScene.js draws any kind it doesn't know as a pothole. Handle 'neighbour' in Part 2.~~ Fixed in Part 2.
 - Low: `WOOF!` text is drawn in front of the stroller and can overlap the handle or `Shhh!`. Cosmetic.
 - Low: old comments still say "potholes and curbs" (src/logic/obstacles.js:1, src/StreetScene.js:61 and :300). Comment only.
 - Low: the "pigeons flown off" check keeps drawing them 12 px longer than needed. Harmless.

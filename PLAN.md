@@ -35,7 +35,7 @@ Each week is one or two Claude Code sessions. Tick a task only when you've playe
 
 ### Phase 2 · Weeks 4–6 · Full run loop
 
-- [ ] W4: Pigeons, dog and neighbour, with warning icons for heard threats. (part 1, pigeons + dog + icon, accepted 2026-11-10; part 2, neighbour, still to do)
+- [x] W4: Pigeons, dog and neighbour, with warning icons for heard threats. (part 1, pigeons + dog + icon, accepted 2026-11-10; part 2, neighbour, accepted 2026-11-11)
 - [ ] W4: Pay the Steam fee and create the app. Brief a capsule artist.
 - [ ] W5: Siren, sleep stages and the deep-sleep arc. Introduce obstacles one at a time.
 - [ ] W5: Sleep minutes are earned and shown on the end screen.

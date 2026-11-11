@@ -122,7 +122,7 @@ export const COLOR_END_BUTTON = 0xb7a6e0; // button colour (same lavender as the
 // Obstacle mix (potholes are whatever is left over)
 export const PIGEON_CHANCE = 0.15; // chance an obstacle is pigeons
 export const DOG_CHANCE = 0.15; // chance an obstacle is a dog
-export const NEIGHBOUR_CHANCE = 0; // chance an obstacle is a neighbour (0 until Part 2 of the W4 spec)
+export const NEIGHBOUR_CHANCE = 0.15; // chance an obstacle is a neighbour
 
 // Noise damage
 export const SLEEP_NOISE_SMALL = 10; // sleep lost on a small noise (pigeons fly off)
@@ -154,3 +154,16 @@ export const WARNING_ICON_HEIGHT = 36; // icon box height
 export const WARNING_ICON_Y = 200; // icon box top (sky, above the roofs)
 export const COLOR_WARNING_ICON = 0xffd98a; // soft amber
 export const DOG_WARNING_TEXT = 'woof?'; // word in the icon
+
+// Neighbour
+export const NEIGHBOUR_MIN_SAFE_SPEED = 180; // slowest speed that gets you past with a wave (only brisk)
+export const NEIGHBOUR_CHAT_MS = 5000; // how long you are stopped
+export const NEIGHBOUR_DRAIN_PER_SEC = 3; // sleep lost per second of chat (15 in total)
+export const NEIGHBOUR_WIDTH = 30; // neighbour box width
+export const NEIGHBOUR_HEIGHT = 100; // neighbour box height
+export const COLOR_NEIGHBOUR = 0x9fcfa6; // soft green
+export const NEIGHBOUR_BUBBLE_WIDTH = 260; // speech bubble width
+export const NEIGHBOUR_BUBBLE_HEIGHT = 40; // speech bubble height
+export const NEIGHBOUR_BUBBLE_GAP = 10; // gap between the neighbour's head and the bubble
+export const COLOR_BUBBLE = 0xffffff; // speech bubble (white)
+export const NEIGHBOUR_CHAT_TEXT = 'Ooh, is the baby asleep? So...'; // bubble text
