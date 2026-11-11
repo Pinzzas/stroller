@@ -2,9 +2,18 @@
 
 Leftovers and bugs, newest first.
 
+## 2026-11-11 — W5 part 1: sleep stages and busier street (accepted)
+- Fixed: obstacle drawing moved out of src/StreetScene.js into src/ObstacleDrawing.js (Low item from W4 part 2).
+- Next: Part 2, the siren and new kinds joining one at a time. Owner to decide first: new kind every 3 obstacles instead of 4? (With 4, the siren arrives at about 1:50, and many early walks end before that.)
+- Watch at W6: a siren with no Shush left can't be stopped (Q3-B); Dreamy may feel rushed (Q4-C). Medium gaps 700 / 560 / 450 are a numbers-only retune.
+- Low: the street plan grows all walk and is scanned from the start each frame. Fine for 30+ minute walks.
+- Low: the stage is read one frame (16 ms) before the clock updates. Not visible.
+- Low: src/logic/obstacles.js header comment still says "Potholes and curbs". Comment only.
+- Note: one test failure appeared once during the build and never came back (15+ reruns). Likely the build test running slowly. If it returns, save the test name and output.
+
 ## 2026-11-11 — W4 part 2: the chatty neighbour (accepted)
 - Fixed: StreetScene no longer draws a neighbour as a pothole (Low item from W4 part 1).
-- Low: src/StreetScene.js is now about 460 lines. Move the obstacle drawing (pigeons, fence, neighbour, crossing) into its own file before the W5 siren.
+- ~~Low: src/StreetScene.js is now about 460 lines. Move the obstacle drawing into its own file before the W5 siren.~~ Done in W5 part 1.
 - Low: when a chat starts, the meter can refill for one frame (at most about 0.01 sleep). Can't be seen in play.
 - Low: src/config.js comment for PAVEMENT_BACK_Y says only pigeons stand there; the neighbour does too. Comment only.
 
