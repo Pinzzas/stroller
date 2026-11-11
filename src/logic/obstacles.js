@@ -17,17 +17,22 @@ export function obstacleRandom(seed, index) {
 // Which kind of obstacle a random value (0 to 1) gives. The ranges are stacked in this
 // order: crossing, pigeons, dog, neighbour, siren; the rest is pothole.
 // chances is { crossing, pigeons, dog, neighbour, siren }.
+// Rounds the running total so ranges like 0.25 + 0.15 + 0.15 + 0.15 add up exactly.
+function roundLimit(limit) {
+  return Math.round(limit * 1000000) / 1000000;
+}
+
 export function obstacleKindFor(randomValue, chances) {
   let limit = chances.crossing;
-  if (randomValue < limit) return 'crossing';
+  if (randomValue < roundLimit(limit)) return 'crossing';
   limit += chances.pigeons;
-  if (randomValue < limit) return 'pigeons';
+  if (randomValue < roundLimit(limit)) return 'pigeons';
   limit += chances.dog;
-  if (randomValue < limit) return 'dog';
+  if (randomValue < roundLimit(limit)) return 'dog';
   limit += chances.neighbour;
-  if (randomValue < limit) return 'neighbour';
+  if (randomValue < roundLimit(limit)) return 'neighbour';
   limit += chances.siren || 0;
-  if (randomValue < limit) return 'siren';
+  if (randomValue < roundLimit(limit)) return 'siren';
   return 'pothole';
 }
 
