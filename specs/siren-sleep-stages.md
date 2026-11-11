@@ -1,7 +1,8 @@
 # Spec: Sleep stages, the deep-sleep arc, the siren and new obstacles one at a time (W5)
 
 Status: Approved 2026-11-11. Q1 = B, Q2 = A, Q3 = B, Q4 = C. Two parts
-(Part 1 first).
+(Part 1 first). Part 1 accepted 2026-11-11. **Part 2: ready to build**
+(owner set `INTRO_EVERY` = 3 on 2026-11-11).
 Plan item: PLAN.md W5, "Siren, sleep stages and the deep-sleep arc. Introduce
 obstacles one at a time." (Sleep minutes and the end screen are the second W5
 task, a later session.)
@@ -31,7 +32,7 @@ Each part gets its own build, review, tests and your playtest:
   stop using one fixed gap. That changes how every obstacle is placed, so it
   is built and checked on its own, with nothing else new.
 - **Part 2: the siren and "one at a time".** The new siren, and every walk
-  starting with potholes only and adding one new kind every 4 obstacles.
+  starting with potholes only and adding one new kind every 3 obstacles.
 
 Why "one at a time" stays in Part 2: with Q1-B it no longer needs a walk
 counter. It is one small rule that picks each obstacle's kind from its number.
@@ -48,9 +49,14 @@ Acceptance criteria are marked [P1] or [P2].
 - A. One new kind per walk (walk 1 potholes and crossings, then one more each
   `Walk again`; reloading the page starts again). Not chosen.
 - **B. (Chosen) New kinds join during every walk.** Each walk starts with
-  potholes only and adds a new kind every 4 obstacles. Easy to test, but every
+  potholes only and adds a new kind every 3 obstacles. Easy to test, but every
   walk repeats the lessons, even after an hour.
 - C. New kinds come with the stages. Not chosen.
+
+**Owner decision 2026-11-11: every 3.** (`INTRO_EVERY` = 3, was 4.) Arrival
+times below are recomputed for 3: at normal speed, roughly crossing 0:25,
+pigeons 0:40, dog 1:00, neighbour 1:15, siren 1:30 (was 0:30 / 0:55 / 1:15 /
+1:35 / 1:50 with 4).
 
 **Q2. How does the siren work?**
 **Decision: A.**
@@ -104,11 +110,11 @@ Everything from earlier tasks stays. New (rectangles and plain text only):
   the meter goes up 10, one charge is used, the icon goes, and the siren does
   no harm. Miss it (or press with no Shush left): `NEE-NAW!` shows where the
   icon was for 1.5 s, pink flash, loud noise.
-- [P2] **One at a time, every walk:** obstacles 1–4 are potholes. The 5th
-  is a crossing, and crossings can come from then on. The 9th is pigeons, the
-  13th a dog, the 17th the neighbour, the 21st a siren. From the 21st on,
-  anything can come. At normal speed, roughly: crossing at 0:30, pigeons at
-  0:55, dog at 1:15, neighbour at 1:35, siren at 1:50.
+- [P2] **One at a time, every walk:** obstacles 1–3 are potholes. The 4th
+  is a crossing, and crossings can come from then on. The 7th is pigeons, the
+  10th a dog, the 13th the neighbour, the 16th a siren. From the 16th on,
+  anything can come. At normal speed, roughly: crossing at 0:25, pigeons at
+  0:40, dog at 1:00, neighbour at 1:15, siren at 1:30.
 
 ## Controls and states
 
@@ -204,13 +210,16 @@ The front wheel's street position is `scroll + 311`, as before.
 ### One at a time, in every walk [P2, Q1-B]
 - `INTRO_ORDER` is `crossing`, `pigeons`, `dog`, `neighbour`, `siren`.
 - Obstacle k can be potholes plus the first `floor(k / INTRO_EVERY)` kinds
-  of `INTRO_ORDER` (`INTRO_EVERY` = 4). So obstacles 0–3 are potholes only,
-  4–7 add crossings, 8–11 pigeons, 12–15 the dog, 16–19 the neighbour, and
-  from 20 everything. Locked kinds get chance 0; potholes take what is left
-  (that is how the mix already works).
-- The first obstacle of each new block (k = 4, 8, 12, 16, 20) is always the
+  of `INTRO_ORDER` (`INTRO_EVERY` = 3, owner decision 2026-11-11). So
+  obstacles 0–2 are potholes only, 3–5 add crossings, 6–8 pigeons, 9–11 the
+  dog, 12–14 the neighbour, and from 15 everything. Locked kinds get chance 0;
+  potholes take what is left (that is how the mix already works).
+- The first obstacle of each new block (k = 3, 6, 9, 12, 15) is always the
   kind that block adds, so you meet each new one straight away.
-- From obstacle 21 on, nothing is forced: the full mix.
+- From obstacle 16 on, nothing is forced: the full mix.
+- Rough timings at normal (120 px/s), using the Part 1 plan (gap 700 up to
+  k = 12, then 500): k = 3 at 3300 → about 0:25; k = 6 at 5400 → 0:40;
+  k = 9 at 7500 → 1:00; k = 12 at 9600 → 1:15; k = 15 at 11100 → 1:30.
 
 ### The full mix [P2]
 Stacked in this order: crossing 0.25, pigeons 0.15, dog 0.15, neighbour 0.15,
@@ -247,7 +256,7 @@ Removed: `OBSTACLE_SPACING` (replaced by `OBSTACLE_GAP_LIGHT`).
 | `COLOR_SIREN_BAR` | 0xf5b0a0 | Filled bar (soft coral) |
 | `COLOR_SIREN_PEAK` | 0xf5b0a0 | Icon colour at the peak (soft coral) |
 | `INTRO_ORDER` | `['crossing', 'pigeons', 'dog', 'neighbour', 'siren']` | Order new kinds join in every walk (text) |
-| `INTRO_EVERY` | 4 | A new kind joins every this many obstacles |
+| `INTRO_EVERY` | 3 | A new kind joins every this many obstacles (owner decision 2026-11-11, was 4) |
 
 Everything else is unchanged.
 
@@ -257,7 +266,7 @@ about 10 obstacles a minute in Light, 14 in Deep and 18 in Dreamy. With the
 damage cut, sleep lost per minute for the same share of mistakes is a bit
 higher in deeper sleep (1 / 1.1 / 1.05), while there is 75% more to handle by
 Dreamy. Healing and Shush stay the same. The first minute is easier than
-today (potholes first, then only potholes and crossings), and from minute 2
+today (potholes first, then crossings at 0:25 and pigeons at 0:40), and from minute 2
 the walk gets clearly harder. So even careful walks should end in the 2–5
 minute range. The W6 gate is the real test.
 
@@ -410,20 +419,20 @@ Tuning values are passed in.
     - S once at about 1350 with 2 charges → siren damage 25, sleep 35;
     - no S, stage 2 → siren damage 15, sleep 35.
 20. [P2] With `order` = `['crossing', 'pigeons', 'dog', 'neighbour', 'siren']`
-    and every = 4: `unlockedKinds`: 0 → `[]`; 3 → `[]`; 4 → `['crossing']`;
-    7 → `['crossing']`; 8 → `['crossing', 'pigeons']`; 20 and 99 → all five.
-    `newKindAt`: 0 → null; 4 → `'crossing'`; 5 → null; 8 → `'pigeons'`;
-    12 → `'dog'`; 16 → `'neighbour'`; 20 → `'siren'`; 24 → null.
+    and every = 3: `unlockedKinds`: 0 → `[]`; 2 → `[]`; 3 → `['crossing']`;
+    5 → `['crossing']`; 6 → `['crossing', 'pigeons']`; 15 and 99 → all five.
+    `newKindAt`: 0 → null; 3 → `'crossing'`; 4 → null; 6 → `'pigeons'`;
+    9 → `'dog'`; 12 → `'neighbour'`; 15 → `'siren'`; 18 → null.
     `introChances(full, ['crossing'])` →
     `{ crossing: 0.25, pigeons: 0, dog: 0, neighbour: 0, siren: 0 }`;
     `introChances(full, [])` → all 0. Neither changes `full`.
-21. [P2] `obstacleKindForIndex(index, r, AC 14 chances, order, 4)`:
-    (0, 0.1) → `'pothole'`; (3, 0) → `'pothole'`; (4, 0.99) → `'crossing'`;
-    (5, 0.1) → `'crossing'`; (5, 0.3) → `'pothole'`; (8, 0.99) →
-    `'pigeons'`; (9, 0.3) → `'pigeons'`; (9, 0.45) → `'pothole'`;
-    (20, 0) → `'siren'`; (21, 0.75) → `'siren'`. For seeds 1, 42 and
-    123456789: k = 0–3 are all potholes; k = 5–7 are only potholes or
-    crossings; no siren before k = 20; all six kinds appear in k = 20–1019.
+21. [P2] `obstacleKindForIndex(index, r, AC 14 chances, order, 3)`:
+    (0, 0.1) → `'pothole'`; (2, 0) → `'pothole'`; (3, 0.99) → `'crossing'`;
+    (4, 0.1) → `'crossing'`; (4, 0.3) → `'pothole'`; (6, 0.99) →
+    `'pigeons'`; (7, 0.3) → `'pigeons'`; (7, 0.45) → `'pothole'`;
+    (15, 0) → `'siren'`; (16, 0.75) → `'siren'`. For seeds 1, 42 and
+    123456789: k = 0–2 are all potholes; k = 4–5 are only potholes or
+    crossings; no siren before k = 15; all six kinds appear in k = 15–1014.
 22. [P2] `src/config.js` exports every Part 2 name with exactly the value
     listed.
 
@@ -451,27 +460,27 @@ Part 1, on a computer browser:
 
 Part 2, on a computer browser:
 
-29. [P2] **Potholes first.** A new walk: the first 4 obstacles are potholes.
-    The 5th (about 0:30 at normal) is a crossing.
+29. [P2] **Potholes first.** A new walk: the first 3 obstacles are potholes.
+    The 4th (about 0:25 at normal) is a crossing.
 30. [P2] **One new kind at a time.** Keep walking at normal: pigeons first
-    show up as the 9th obstacle (about 0:55), the dog as the 13th (about
-    1:15, `woof?` first), the neighbour as the 17th (about 1:35). No kind
+    show up as the 7th obstacle (about 0:40), the dog as the 10th (about
+    1:00, `woof?` first), the neighbour as the 13th (about 1:15). No kind
     appears before its turn.
-31. [P2] **Siren, done right.** The 21st obstacle (about 1:50 at normal) is a
+31. [P2] **Siren, done right.** The 16th obstacle (about 1:30 at normal) is a
     siren: `nee-naw` appears top right and the bar under it fills. Keep a
     Shush. When the bar is full and the icon turns coral, press S. `Shhh!`
     shows, the meter goes up by 10, the Shush label drops by one, and the
     icon goes. No hit.
 32. [P2] **Siren, done wrong.** Next siren: don't press S. `NEE-NAW!` shows
-    top right for about 1.5 s, pink flash, drop of 15 (it is Dreamy by now;
-    25 in Light).
+    top right for about 1.5 s, pink flash, drop of 20 if the label says
+    `Deep sleep`, 15 if `Dreamy sleep` (25 in Light).
 33. [P2] **Siren, too early.** Next siren: press S when the bar is half
     full. It's a normal Shush (+10, uses a charge), and the siren still hits
     after the peak.
 34. [P2] **No charges left.** Use both shushes, then press S at a siren's
     peak. Nothing happens, and the siren hits after the peak.
 35. [P2] **Every walk.** Let the baby wake and press `Walk again`: the new
-    walk again starts with 4 potholes.
+    walk again starts with 3 potholes.
 
 On iPhone Safari (landscape), with the test buttons:
 
@@ -492,16 +501,16 @@ On iPhone Safari (landscape), with the test buttons:
   In W10 a real sound that gets louder takes over that job.
 - The siren's share (10%) comes out of potholes, so potholes go from 30% to
   20% of the full mix. Crossings, pigeons, dog and neighbour stay the same.
-- Q1-B: the first obstacle of each block of 4 is always the new kind, so each
+- Q1-B: the first obstacle of each block of 3 is always the new kind, so each
   lesson is met at once. The new kinds always come in the same order:
   crossing, pigeons, dog, neighbour, siren.
 - **Awkward, Q1-B:** the lessons are in every walk, so later kinds come late.
-  At normal speed the dog first shows at about 1:15, the neighbour at 1:35 and
-  the siren at 1:50. Walks that end sooner never meet them. That includes
-  many early walks: the W3 tuning put a careless walk at about 1:15–1:30. At
-  your W6 cold playtest, some players may never see the siren. Going brisk
-  brings them sooner. If this bothers you, lower `INTRO_EVERY` (e.g. 3: siren
-  at about 1:25) or lower the gap. Both are numbers only.
+  With `INTRO_EVERY` = 3 (owner decision 2026-11-11), at normal speed the dog
+  first shows at about 1:00, the neighbour at 1:15 and the siren at 1:30
+  (with 4 it was 1:15 / 1:35 / 1:50). Walks that end sooner never meet them.
+  The W3 tuning put a careless walk at about 1:15–1:30, so some careless
+  walks still end just before the siren. Going brisk brings it sooner.
+  `INTRO_EVERY` is a number only, so it is easy to retune after the W6 gate.
 - **Awkward, Q3-B:** with no Shush left, a siren can't be stopped. That goes
   against "every obstacle has one clear right answer". What softens it: the
   label shows `Shush: back in Ns`, and `nee-naw` warns you about 8 s ahead at
@@ -521,7 +530,7 @@ On iPhone Safari (landscape), with the test buttons:
   anyway, so gameplay-dev could do that tidy-up at the start of Part 1. It
   changes nothing you can see.
 - DESIGN.md: with your approval I'll add "(Deep ×0.8, Dreamy ×0.6)" to the
-  sleep stages line, and note that new obstacles join "one every 4
+  sleep stages line, and note that new obstacles join "one every 3
   obstacles in each walk". I won't change it until you say so.
 
 ## Out of scope
